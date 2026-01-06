@@ -73,34 +73,6 @@ wait_for_db() {
     return 1
 }
 
-decode_base64_if_encoded() {
-    local value="$1"
-    local var_name="$2"
-    
-    # Check if value looks like valid base64:
-    # - Contains base64-specific characters (+ or /), OR
-    # - Has padding (=) at the end
-    # Pure alphanumeric strings without padding are NOT considered base64
-    if [[ "$value" =~ [+/] ]] || [[ "$value" == *= ]]; then
-        # Attempt to decode the value
-        local decoded
-        decoded=$(echo -n "$value" | base64 -d 2>/dev/null) && {
-            # Check if decoding succeeded and produced a different string
-            if [ "$decoded" != "$value" ] && [ -n "$decoded" ]; then
-                echo "[mautic_entrypoint]: Decoding base64 $var_name"
-                echo "$decoded"
-                return 0
-            fi
-        }
-        echo "[mautic_entrypoint]: Base64 decoding failed for $var_name, using original value"
-    else
-        echo "[mautic_entrypoint]: $var_name does not appear to be base64-encoded, using as-is"
-    fi
-    
-    # Return original value if decoding failed or not needed
-    echo "$value"
-}
-
 run_automatic_install() {
     echo "[mautic_entrypoint]: Running automatic Mautic installation..."
     
@@ -114,9 +86,6 @@ run_automatic_install() {
     SITE_URL="${SITE_URL%/}"
     
     echo "[mautic_entrypoint]: Installing Mautic at: $SITE_URL"
-    
-    # Decode admin password if it's base64-encoded
-    MAUTIC_ADMIN_PASSWORD=$(decode_base64_if_encoded "${MAUTIC_ADMIN_PASSWORD:-mautic}" "MAUTIC_ADMIN_PASSWORD")
     
     # Run Mautic installer via console command
     php /var/www/html/bin/console mautic:install "$SITE_URL" \
