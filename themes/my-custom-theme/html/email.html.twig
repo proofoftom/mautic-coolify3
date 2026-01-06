@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject|default('Email from Mautic') }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <header style="border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="color: #007bff; margin: 0;">{{ company_name|default('Your Company') }}</h1>
+        </header>
+        
+        <main>
+            {{ content|raw }}
+        </main>
+        
+        <footer style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666;">
+            <p>You received this email because you subscribed to our newsletter.</p>
+            <p>&copy; {{ "now"|date("Y") }} {{ company_name|default('Your Company') }}. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

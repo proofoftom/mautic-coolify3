@@ -1,0 +1,376 @@
+<tool_usage_guide>
+  <tool_priorities>
+    <priority level="1">
+      <tool>list_files</tool>
+      <when>At the start to understand project structure</when>
+      <why>Get overview of files that may have changed</why>
+    </priority>
+    <priority level="2">
+      <tool>execute_command</tool>
+      <when>To check git status and run tests</when>
+      <why>Essential for understanding changes and verifying functionality</why>
+    </priority>
+    <priority level="3">
+      <tool>read_file</tool>
+      <when>To examine modified files in detail</when>
+      <why>Get full context of changes for thorough review</why>
+    </priority>
+    <priority level="4">
+      <tool>search_files</tool>
+      <when>To find related files and patterns</when>
+      <why>Identify all files that may be affected by changes</why>
+    </priority>
+  </tool_priorities>
+
+  <tool_specific_guidance>
+    <tool name="execute_command - git_status">
+      <purpose>Check what files have been modified</purpose>
+      <when_to_use>At the beginning of review process</when_to_use>
+      <syntax>
+        <command>git status</command>
+        <parameters>
+          <parameter name="cwd" required="false">
+            <description>Working directory (defaults to workspace)</description>
+            <type>string</type>
+            <example>.</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        On branch main
+        Changes not staged for commit:
+          M src/userService.ts
+          M tests/userService.test.ts
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Use this to identify which files need review</note>
+        <note>Look for both modified (M) and new (??) files</note>
+        <note>Pay attention to untracked files that should be reviewed</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - git_diff">
+      <purpose>View the actual changes made to files</purpose>
+      <when_to_use>After identifying modified files</when_to_use>
+      <syntax>
+        <command>git diff <file></command>
+        <parameters>
+          <parameter name="file" required="false">
+            <description>Specific file to diff (optional)</description>
+            <type>string</type>
+            <example>src/userService.ts</example>
+          </parameter>
+          <parameter name="cached" required="false">
+            <description>Use cached diff for faster review</description>
+            <type>boolean</type>
+            <example>false</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        diff --git a/src/userService.ts b/src/userService.ts
+        index 1234567..abcdef0
+        --- a/src/userService.ts
+        +++ b/src/userService.ts
+        @@ -15,7 +15,7 @@
+         export function getUser(id) {
+        -  return users.find(u => u.id === id);
+        +  export function getUser(id) {
+        +    const user = users.find(u => u.id === id);
+        +    if (!user) throw new Error('User not found');
+        +    return user;
+         }
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Use this to understand exact changes made</note>
+        <note>Review both additions (+) and deletions (-)</note>
+        <note>Pay attention to context lines (@@)</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - git_log">
+      <purpose>Review commit history for context</purpose>
+      <when_to_use>When reviewing related changes or understanding context</when_to_use>
+      <syntax>
+        <command>git log --oneline -n <count></command>
+        <parameters>
+          <parameter name="oneline" required="false">
+            <description>Show one commit per line</description>
+            <type>boolean</type>
+            <example>true</example>
+          </parameter>
+          <parameter name="n" required="false">
+            <description>Number of commits to show</description>
+            <type>number</type>
+            <example>10</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        abc1234 fix(auth): handle null response in user endpoint
+        def5678 refactor(api): extract session management
+        9012ef feat(user): add login and registration endpoints
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Helps understand recent changes to the codebase</note>
+        <note>Useful for identifying related work</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - npm_test">
+      <purpose>Run the project's test suite</purpose>
+      <when_to_use>After code review, before committing</when_to_use>
+      <syntax>
+        <command>npm test</command>
+        <alternatives>
+          <alt>npm run test</alt>
+          <alt>npm test -- --coverage</alt>
+          <alt>pytest</alt>
+          <alt>python -m pytest</alt>
+        </alternatives>
+      </syntax>
+      <parameters>
+        <parameter name="cwd" required="false">
+            <description>Working directory (defaults to workspace)</description>
+            <type>string</type>
+            <example>.</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        PASS  src/userService.test.ts
+          getUser
+            ✓ should return user when found
+            ✓ should throw error when not found
+          12/12 passed (100%)
+
+        Test Suites: 1 passed, 1 total
+        Tests:       12 passed, 12 total
+        Snapshots:   0 total
+        Time:        2.456 s
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>All tests must pass before code can be committed</note>
+        <note>Check test coverage percentage if available</note>
+        <note>Look for any skipped or failing tests</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - npm_lint">
+      <purpose>Run linting tools to check code quality</purpose>
+      <when_to_use>During code review for additional quality checks</when_to_use>
+      <syntax>
+        <command>npm run lint</command>
+        <alternatives>
+          <alt>npm run lint:check</alt>
+          <alt>npm run eslint</alt>
+          <alt>pylint src/</alt>
+          <alt>flake8</alt>
+        </alternatives>
+      </syntax>
+      <parameters>
+        <parameter name="cwd" required="false">
+            <description>Working directory (defaults to workspace)</description>
+            <type>string</type>
+            <example>.</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        src/userService.ts
+          15:3  error  'user' is defined but never used  no-unused-vars
+          23:7  warning  Missing semicolon  semi
+
+        ✖ 2 problems (1 error, 1 warning)
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Linting catches style and potential issues</note>
+        <note>Use as supplemental to manual review, not replacement</note>
+        <note>Fix linting errors before final approval</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - git_add">
+      <purpose>Stage files for commit</purpose>
+      <when_to_use>After all reviews pass successfully</when_to_use>
+      <syntax>
+        <command>git add <files></command>
+        <parameters>
+          <parameter name="files" required="false">
+            <description>Files to stage (space separated)</description>
+            <type>string</type>
+            <example>src/userService.ts tests/</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <alternatives>
+        <alt>git add . (stage all changes)</alt>
+      </alternatives>
+      <expected_output>
+        <![CDATA[
+        No output on success
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Only stage files that have been reviewed and approved</note>
+        <note>Verify files being staged match the review scope</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - git_commit">
+      <purpose>Create commit with conventional commit message</purpose>
+      <when_to_use>After staging approved changes</when_to_use>
+      <syntax>
+        <command>git commit -m "<message>"</command>
+        <parameters>
+          <parameter name="message" required="true">
+            <description>Conventional commit message</description>
+            <type>string</type>
+            <example>feat(auth): add user login functionality</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        [main 8f3a2b1] feat(auth): add user login functionality
+
+         1 file changed, 45 insertions(+)
+         create mode 100644 src/auth/login.ts
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Follow conventional commits format strictly</note>
+        <note>Include type, scope, subject, body, and footer</note>
+        <note>Reference related issues in footer</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="execute_command - git_push">
+      <purpose>Push commits to remote repository</purpose>
+      <when_to_use>After successful commit</when_to_use>
+      <syntax>
+        <command>git push</command>
+        <alternatives>
+          <alt>git push origin main</alt>
+          <alt>git push --set-upstream</alt>
+        </alternatives>
+      </syntax>
+      <parameters>
+        <parameter name="cwd" required="false">
+            <description>Working directory (defaults to workspace)</description>
+            <type>string</type>
+            <example>.</example>
+          </parameter>
+        </parameters>
+      </syntax>
+      <expected_output>
+        <![CDATA[
+        To github.com:username/repo.git
+           * [new branch]         abc1234..def5678 -> main (forced update)
+        ]]>
+      </expected_output>
+      <usage_notes>
+        <note>Verify push completed successfully</note>
+        <note>Note the commit hash for reference</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="read_file">
+      <purpose>Read file contents for detailed review</purpose>
+      <when_to_use>When examining specific files identified by git status</when_to_use>
+      <parameters>
+        <parameter name="files" required="true">
+          <description>Array of file paths to read</description>
+          <type>array of strings</type>
+        </parameter>
+      </parameters>
+      <usage_notes>
+        <note>Read both the modified file and related test files</note>
+        <note>Read configuration files that may be affected</note>
+        <note>Read documentation for context</note>
+      </usage_notes>
+    </tool>
+
+    <tool name="search_files">
+      <purpose>Find files matching patterns across project</purpose>
+      <when_to_use>When looking for related files or patterns</when_to_use>
+      <parameters>
+        <parameter name="path" required="true">
+          <description>Directory to search in</description>
+          <type>string</type>
+          <example>.</example>
+        </parameter>
+        <parameter name="regex" required="true">
+          <description>Pattern to search for</description>
+          <type>string</type>
+          <example>.*\.test\.(ts|js)$</example>
+        </parameter>
+      </parameters>
+      <usage_notes>
+        <note>Use to find all test files for a feature</note>
+        <note>Search for configuration files related to changes</note>
+        <note>Find all files that import a changed module</note>
+      </usage_notes>
+    </tool>
+  </tool_specific_guidance>
+
+  <command_sequences>
+    <sequence name="full_review_workflow">
+      <description>Complete review workflow from start to push</description>
+      <steps>
+        <step number="1">
+          <command>git status</command>
+          <purpose>Identify modified files</purpose>
+        </step>
+        <step number="2">
+          <command>git diff</command>
+          <purpose>Review changes made</purpose>
+        </step>
+        <step number="3">
+          <command>npm test</command>
+          <purpose>Run test suite</purpose>
+        </step>
+        <step number="4">
+          <command>npm run lint (optional)</command>
+          <purpose>Check code quality</purpose>
+        </step>
+        <step number="5">
+          <command>git add <files></command>
+          <purpose>Stage approved changes</purpose>
+        </step>
+        <step number="6">
+          <command>git commit -m "<message>"</command>
+          <purpose>Commit with conventional message</purpose>
+        </step>
+        <step number="7">
+          <command>git push</command>
+          <purpose>Push to remote repository</purpose>
+        </step>
+      </steps>
+    </sequence>
+
+    <sequence name="test_coverage_check">
+      <description>Verify test coverage before approval</description>
+      <steps>
+        <step number="1">
+          <command>npm run test:coverage</command>
+          <purpose>Generate coverage report</purpose>
+        </step>
+        <step number="2">
+          <action>Review coverage report</action>
+          <purpose>Ensure adequate coverage</purpose>
+        </step>
+      </steps>
+    </sequence>
+  </command_sequences>
+</tool_usage_guide>

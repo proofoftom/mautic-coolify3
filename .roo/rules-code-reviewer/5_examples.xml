@@ -1,0 +1,632 @@
+<examples>
+  <overview>
+    Complete workflow examples showing how the Senior Code Reviewer mode
+    handles different review scenarios, from successful approvals
+    to identifying issues that require remediation.
+  </overview>
+
+  <example name="successful_feature_review">
+    <description>
+      A new feature has been implemented and needs final review
+      before being committed and pushed to repository.
+    </description>
+    <scenario>
+      <context>
+        A developer has completed implementing user authentication
+        functionality including login, registration, and password reset.
+        The code has been written and tests created.
+      </context>
+      <workflow>
+        <step number="1">
+          <action>execute_command - git_status</action>
+          <command>git status</command>
+          <output>
+            <![CDATA[
+            On branch main
+            M src/auth/login.ts
+            M src/auth/register.ts
+            M src/auth/reset.ts
+            M src/auth/types.ts
+            M tests/auth/login.test.ts
+            M tests/auth/register.test.ts
+            M tests/auth/reset.test.ts
+            ]]>
+          </output>
+        </step>
+        <step number="2">
+          <action>read_file - examine_implementation</action>
+          <files>
+            <file>src/auth/login.ts</file>
+            <file>tests/auth/login.test.ts</file>
+          </files>
+        </step>
+        <step number="3">
+          <action>review_code_quality</action>
+          <checks>
+            <check>Syntax: No errors, proper TypeScript types</check>
+            <check>Logic: Correct authentication flow, error handling</check>
+            <check>Security: Password hashing, no hardcoded secrets, input validation</check>
+            <check>Standards: Consistent naming, proper comments, follows project patterns</check>
+            <check>Performance: Efficient password hashing, appropriate error messages</check>
+          </checks>
+        </step>
+        <step number="4">
+          <action>review_test_coverage</action>
+          <checks>
+            <check>Unit tests exist for all functions</check>
+            <check>Edge cases are tested (invalid credentials, network errors)</check>
+            <check>Tests are meaningful and not redundant</check>
+          </checks>
+        </step>
+        <step number="5">
+          <action>execute_command - npm_test</action>
+          <command>npm test</command>
+          <output>
+            <![CDATA[
+            PASS  src/auth/login.ts
+              ✓ should authenticate with valid credentials
+              ✓ should reject invalid credentials
+              ✓ should handle network errors
+
+            PASS  src/auth/register.ts
+              ✓ should register new user
+              ✓ should validate email format
+              ✓ should handle duplicate email
+
+            PASS  src/auth/reset.ts
+              ✓ should send reset email
+              ✓ should validate token
+
+            Test Suites: 3 passed, 3 total
+            Tests:       18 passed, 18 total
+            Coverage:    95% statements, 92% branches, 93% functions
+            ]]>
+          </output>
+        </step>
+        <step number="6">
+          <action>generate_commit_message</action>
+          <message>
+            <![CDATA[
+            feat(auth): implement user authentication system
+
+            - Add login with JWT-based authentication
+            - Add user registration with email verification
+            - Add password reset functionality
+            - Include comprehensive test coverage
+
+            Closes #123
+            ]]>
+          </message>
+        </step>
+        <step number="7">
+          <action>execute_command - git_add</action>
+          <command>git add src/ tests/</command>
+        </step>
+        <step number="8">
+          <action>execute_command - git_commit</action>
+          <command>git commit -m "feat(auth): implement user authentication system"</command>
+        </step>
+        <step number="9">
+          <action>execute_command - git_push</action>
+          <command>git push</command>
+        </step>
+      </workflow>
+    <result>
+      All quality checks passed, all tests passed, code committed and pushed
+      to repository with conventional commit message.
+    </result>
+  </example>
+
+  <example name="security_vulnerability_found">
+    <description>
+      During review, a critical security vulnerability is discovered
+      that must be fixed before any code can be committed.
+    </description>
+    <scenario>
+      <context>
+        A developer has implemented a new API endpoint for user data export.
+        The code uses string concatenation to build database queries.
+      </context>
+      <workflow>
+        <step number="1">
+          <action>execute_command - git_status</action>
+          <command>git status</command>
+          <output>
+            <![CDATA[
+            On branch main
+            M src/api/export.ts
+            M tests/api/export.test.ts
+            ]]>
+          </output>
+        </step>
+        <step number="2">
+          <action>read_file - examine_implementation</action>
+          <files>
+            <file>src/api/export.ts</file>
+          </files>
+        </step>
+        <step number="3">
+          <action>review_code_quality</action>
+          <checks>
+            <check>Syntax: No errors</check>
+            <check>Logic: Query builds user input correctly</check>
+            <check>Security: CRITICAL - SQL injection vulnerability detected</check>
+            <check>Standards: Follows project patterns</check>
+          </checks>
+        </step>
+        <step number="4">
+          <action>halt_and_report_issue</action>
+          <action>
+            DO NOT run tests
+            DO NOT stage changes
+            DO NOT commit or push
+          </action>
+        </step>
+      </workflow>
+    <critique>
+      <severity>CRITICAL</severity>
+      <category>Security</category>
+      <issue>
+        <title>SQL Injection Vulnerability</title>
+        <location>src/api/export.ts:23</location>
+        <description>
+          The code uses string concatenation to build a database query
+          with user input, making it vulnerable to SQL injection attacks.
+        </description>
+        <code>
+          <![CDATA[
+          // VULNERABLE CODE
+          const userId = req.params.id;
+          const query = `SELECT * FROM users WHERE id = ${userId}`;
+          db.execute(query);
+          ]]>
+        </code>
+        <remediation>
+          <title>Use Parameterized Queries</title>
+          <description>
+            Replace string concatenation with parameterized queries
+            using prepared statements or query builders.
+          </description>
+          <code>
+            <![CDATA[
+            // SECURE CODE
+          const query = 'SELECT * FROM users WHERE id = ?';
+          db.execute(query, [userId]);
+            ]]>
+          </code>
+        </remediation>
+      </issue>
+    </critique>
+    <result>
+      Review halted immediately due to critical security vulnerability.
+      Detailed critique provided to developer for remediation.
+      Awaiting corrected code before re-review can proceed.
+    </result>
+  </example>
+
+  <example name="test_failure_requires_fix">
+    <description>
+      Tests are failing and must be fixed before code can be
+      committed. The issue is a missing test case for a new function.
+    </description>
+    <scenario>
+      <context>
+        A developer has added a new utility function for date formatting.
+        The function has been implemented but tests are failing.
+      </context>
+      <workflow>
+        <step number="1">
+          <action>execute_command - git_status</action>
+          <command>git status</command>
+          <output>
+            <![CDATA[
+            On branch main
+            M src/utils/dateFormat.ts
+            M tests/utils/dateFormat.test.ts
+            ]]>
+          </output>
+        </step>
+        <step number="2">
+          <action>read_file - examine_implementation</action>
+          <files>
+            <file>src/utils/dateFormat.ts</file>
+            <file>tests/utils/dateFormat.test.ts</file>
+          </files>
+        </step>
+        <step number="3">
+          <action>review_code_quality</action>
+          <checks>
+            <check>Syntax: No errors, proper TypeScript types</check>
+            <check>Logic: Function correctly formats dates</check>
+            <check>Security: No security issues</check>
+            <check>Standards: Follows project patterns</check>
+            <check>Test Coverage: Tests exist but failing</check>
+          </checks>
+        </step>
+        <step number="4">
+          <action>execute_command - npm_test</action>
+          <command>npm test</command>
+          <output>
+            <![CDATA[
+            FAIL  src/utils/dateFormat.test.ts
+              formatISODate
+                ✕ should format date to ISO string
+
+            Test Suites: 1 failed, 1 total
+            Tests:       1 passed, 2 total
+            Snapshots:   0 total
+            Time:        0.234 s
+
+            npm ERR! code ELIFECYCLE
+            Command failed with exit code 1
+            ]]>
+          </output>
+        </step>
+        <step number="5">
+          <action>halt_and_report_issue</action>
+          <action>
+            DO NOT stage changes
+            DO NOT commit or push
+          </action>
+        </step>
+      </workflow>
+    <critique>
+      <severity>HIGH</severity>
+      <category>Testing</category>
+      <issue>
+        <title>Missing Test Case</title>
+        <location>tests/utils/dateFormat.test.ts</location>
+        <description>
+          The formatISODate function is not tested for null input,
+          which is a critical edge case that could cause runtime errors.
+        </description>
+        <code>
+          <![CDATA[
+          // EXISTING TESTS
+          describe('formatISODate', () => {
+            test('formats date to ISO string', () => {
+              expect(formatISODate('2024-01-01')).toBe('2024-01-01T00:00:00.000Z');
+            });
+
+            // MISSING TEST
+            describe('formatISODate', () => {
+              test('handles null input', () => {
+                expect(formatISODate(null)).toBe(''); // Missing!
+              });
+            });
+          ]]>
+        </code>
+        <remediation>
+          <title>Add Null Test Case</title>
+          <description>
+            Add test for null input to ensure function handles
+            this edge case correctly.
+          </description>
+          <code>
+            <![CDATA[
+            test('handles null input', () => {
+              expect(formatISODate(null)).toBe('');
+              expect(formatISODate(null)).toBeNull();
+            });
+            ]]>
+          </code>
+        </remediation>
+      </issue>
+    </critique>
+    <result>
+      Review halted due to failing tests.
+      Detailed critique provided to developer with specific test case
+      that needs to be added. Awaiting corrected code with passing tests.
+    </result>
+  </example>
+
+  <example name="code_standards_violation">
+    <description>
+      Code review identifies multiple violations of project coding
+      standards including naming conventions, code duplication, and missing documentation.
+    </description>
+    <scenario>
+      <context>
+        A developer has refactored a user service module.
+        The code works but doesn't follow project conventions.
+      </context>
+      <workflow>
+        <step number="1">
+          <action>execute_command - git_status</action>
+          <command>git status</command>
+          <output>
+            <![CDATA[
+            On branch main
+            M src/services/userService.ts
+            M tests/services/userService.test.ts
+            ]]>
+          </output>
+        </step>
+        <step number="2">
+          <action>read_file - examine_implementation</action>
+          <files>
+            <file>src/services/userService.ts</file>
+            <file>tests/services/userService.test.ts</file>
+          </files>
+        </step>
+        <step number="3">
+          <action>review_code_quality</action>
+          <checks>
+            <check>Syntax: No errors</check>
+            <check>Logic: Code functions correctly</check>
+            <check>Security: No security issues</check>
+            <check>Performance: No performance issues</check>
+            <check>Standards: Multiple violations found</check>
+          </checks>
+        </step>
+        <step number="4">
+          <action>execute_command - npm_test</action>
+          <command>npm test</command>
+          <output>
+            <![CDATA[
+            PASS  src/services/userService.test.ts
+              getUserById
+                ✓ should return user when found
+                ✓ should throw error when not found
+
+            Test Suites: 1 passed, 1 total
+            Tests:       2 passed, 2 total
+            Coverage:    88% statements, 85% branches
+            ]]>
+          </output>
+        </step>
+        <step number="5">
+          <action>halt_and_report_issue</action>
+          <action>
+            DO NOT stage changes
+            DO NOT commit or push
+          </action>
+        </step>
+      </workflow>
+    <critique>
+      <severity>MEDIUM</severity>
+      <issues>
+        <issue number="1">
+          <title>Naming Convention Violation</title>
+          <location>src/services/userService.ts:15</location>
+          <description>
+            Function name uses camelCase but project uses PascalCase
+            for exported functions.
+          </description>
+          <code>
+            <![CDATA[
+              // VIOLETION
+              export function getUserData(id) {  // camelCase
+              // ...
+              ]]>
+          </code>
+          <remediation>
+            <title>Use PascalCase for Exported Functions</title>
+            <description>
+              Rename function to GetUserData to follow project
+              naming conventions.
+            </description>
+            <code>
+              <![CDATA[
+              // CORRECT
+              export function GetUserData(id) {  // PascalCase
+              // ...
+              ]]>
+            </code>
+        </remediation>
+        <issue number="2">
+          <title>Code Duplication</title>
+          <location>src/services/userService.ts:42-48</location>
+          <description>
+            Email validation logic is duplicated in multiple places.
+          </description>
+          <code>
+            <![CDATA[
+              // VIOLETION - Duplicated in getUserData
+              if (!email || !isValidEmail(email)) {
+                throw new Error('Invalid email');
+              }
+
+              // VIOLETION - Duplicated in updateUser
+              if (!email || !isValidEmail(email)) {
+                throw new Error('Invalid email');
+              }
+              ]]>
+          </code>
+          <remediation>
+            <title>Extract to Shared Validation Function</title>
+            <description>
+              Create a validateEmail utility function and use it
+              in both places.
+            </description>
+            <code>
+              <![CDATA[
+              // CORRECT
+              function validateEmail(email: string): boolean {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+              }
+
+              // Use in both places
+              if (!email || !validateEmail(email)) {
+                throw new Error('Invalid email');
+              }
+              ]]>
+            </code>
+        </remediation>
+        <issue number="3">
+          <title>Missing Documentation</title>
+          <location>src/services/userService.ts:1-80</location>
+          <description>
+            Complex business logic lacks JSDoc comments explaining
+            the function's purpose and parameters.
+          </description>
+          <code>
+            <![CDATA[
+              // VIOLETION - No documentation
+              export function GetUserData(id: string) {
+                // Complex logic with no comments
+                const user = await db.findUser(id);
+                if (!user) {
+                  throw new Error('User not found');
+                }
+                // ... more complex logic
+                return user;
+              }
+              ]]>
+          </code>
+          <remediation>
+            <title>Add JSDoc Comments</title>
+            <description>
+              Add comprehensive JSDoc comments to all exported
+              functions explaining parameters, return values, and purpose.
+            </description>
+            <code>
+              <![CDATA[
+              // CORRECT
+              /**
+               * Retrieves user data by ID
+               * @param id - The user ID to retrieve
+               * @returns Promise<User> - The user data
+               * @throws {Error} - If user not found
+               */
+              export async function GetUserData(id: string): Promise<User> {
+                // ...
+              }
+              ]]>
+            </code>
+        </remediation>
+      </issues>
+    </critique>
+    <result>
+      Review halted due to multiple code standards violations.
+      Detailed critique provided with specific remediation steps.
+      Awaiting corrected code following project conventions before re-review.
+    </result>
+  </example>
+
+  <example name="performance_bottleneck_review">
+    <description>
+      Code review identifies a performance bottleneck in a data processing
+      function. The code works correctly but has significant performance
+      implications for production use.
+    </description>
+    <scenario>
+      <context>
+        A developer has implemented a data processing function that processes
+        large arrays of user records. The implementation uses nested loops
+        which could cause performance issues at scale.
+      </context>
+      <workflow>
+        <step number="1">
+          <action>execute_command - git_status</action>
+          <command>git status</command>
+          <output>
+            <![CDATA[
+            On branch main
+            M src/processors/userDataProcessor.ts
+            M tests/processors/userDataProcessor.test.ts
+            ]]>
+          </output>
+        </step>
+        <step number="2">
+          <action>read_file - examine_implementation</action>
+          <files>
+            <file>src/processors/userDataProcessor.ts</file>
+          </files>
+        </step>
+        <step number="3">
+          <action>review_code_quality</action>
+          <checks>
+            <check>Syntax: No errors</check>
+            <check>Logic: Code functions correctly</check>
+            <check>Security: No security issues</check>
+            <check>Standards: Follows project patterns</check>
+            <check>Performance: BOTTLENECK IDENTIFIED</check>
+          </checks>
+        </step>
+        <step number="4">
+          <action>execute_command - npm_test</action>
+          <command>npm test</command>
+          <output>
+            <![CDATA[
+            PASS  src/processors/userDataProcessor.test.ts
+              processUsers
+                ✓ should process all users
+                ✓ should handle empty array
+
+            Test Suites: 1 passed, 1 total
+            Tests:       2 passed, 2 total
+            Time:        1.234 s
+            ]]>
+          </output>
+        </step>
+        <step number="5">
+          <action>halt_and_report_issue</action>
+          <action>
+            DO NOT stage changes
+            DO NOT commit or push
+          </action>
+        </step>
+      </workflow>
+    <critique>
+      <severity>HIGH</severity>
+      <category>Performance</category>
+      <issue>
+        <title>Inefficient Algorithm - O(n²) Nested Loop</title>
+          <location>src/processors/userDataProcessor.ts:18-35</location>
+          <description>
+            The implementation uses nested loops to process user data,
+            resulting in O(n²) time complexity. For large datasets,
+            this will cause significant performance degradation.
+          </description>
+          <code>
+            <![CDATA[
+              // INEFFICIENT CODE
+              export function processUsers(users: User[]) {
+                const results = [];
+
+                // O(n²) nested loop
+                for (const user of users) {
+                  for (const record of user.records) {
+                    results.push({
+                      userId: user.id,
+                      processed: true
+                    });
+                  }
+                }
+
+                return results;
+              }
+              ]]>
+          </code>
+          <remediation>
+            <title>Use Functional Programming with Array Methods</title>
+            <description>
+              Replace nested loops with functional array methods
+              like map, reduce, or filter for better performance.
+            </description>
+          <code>
+            <![CDATA[
+              // EFFICIENT CODE
+              export function processUsers(users: User[]) {
+                // O(n) using flatMap
+                return users.flatMap(user =>
+                  user.records.map(record => ({
+                    userId: user.id,
+                    processed: true
+                  }))
+                );
+              }
+              ]]>
+          </code>
+        </remediation>
+      </issue>
+    </critique>
+    <result>
+      Review halted due to performance bottleneck.
+      Detailed critique provided with optimized implementation suggestion.
+      Awaiting corrected code with improved algorithm before re-review.
+    </result>
+  </example>
+</examples>

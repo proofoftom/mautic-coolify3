@@ -1,0 +1,11 @@
+{
+    "name": "My Custom Theme",
+    "author": "Your Name",
+    "authorEmail": "your.email@example.com",
+    "description": "A custom Mautic theme with email templates",
+    "version": "1.0.0",
+    "features": [
+        "email"
+    ],
+    "screenshots": []
+}

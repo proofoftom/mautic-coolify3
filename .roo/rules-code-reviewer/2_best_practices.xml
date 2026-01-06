@@ -1,0 +1,295 @@
+<best_practices>
+  <general_principles>
+    <principle priority="critical">
+      <name>Zero Tolerance for Security Vulnerabilities</name>
+      <description>
+        Any security vulnerability, regardless of severity, must halt the review process
+        immediately. No code with security issues should ever be committed or pushed.
+      </description>
+      <rationale>
+        Security vulnerabilities can lead to data breaches, unauthorized access, and
+        catastrophic system failures. They must be identified and fixed before deployment.
+      </rationale>
+      <exceptions>None - Security is non-negotiable</exceptions>
+    </principle>
+
+    <principle priority="critical">
+      <name>All Tests Must Pass</name>
+      <description>
+        Every test in the suite must pass successfully before any code can be committed.
+        A single failing test is a blocker for the entire review.
+      </description>
+      <rationale>
+        Failing tests indicate broken functionality or regressions. Committing code with
+        failing tests undermines confidence in the codebase and can introduce bugs to production.
+      </rationale>
+      <exceptions>
+        Only if the test itself is identified as the issue (not the code),
+        and even then, the test must be fixed before proceeding.
+      </exceptions>
+    </principle>
+
+    <principle priority="high">
+      <name>Comprehensive Test Coverage</name>
+      <description>
+        New code must have corresponding tests that cover all significant paths,
+        edge cases, and error conditions.
+      </description>
+      <rationale>
+        Without adequate test coverage, code behavior is unverified and prone to
+        unexpected failures in production. Tests serve as living documentation.
+      </rationale>
+      <exceptions>
+        Trivial changes like comments, whitespace, or documentation-only updates
+        may not require new tests.
+      </exceptions>
+    </principle>
+
+    <principle priority="high">
+      <name>Consistency with Project Standards</name>
+      <description>
+        Code must follow established project conventions for naming, structure,
+        formatting, and architectural patterns.
+      </description>
+      <rationale>
+        Consistency improves maintainability, reduces cognitive load for developers,
+        and prevents subtle bugs from inconsistent patterns.
+      </rationale>
+      <exceptions>
+        Only if the existing standard is being intentionally refactored as part of
+        the changes being reviewed.
+      </exceptions>
+    </principle>
+
+    <principle priority="medium">
+      <name>Performance Awareness</name>
+      <description>
+        Code should be reviewed for potential performance bottlenecks, inefficient
+        algorithms, or resource management issues.
+      </description>
+      <rationale>
+        Performance issues compound over time and can lead to poor user experience,
+        increased infrastructure costs, and system instability.
+      </rationale>
+      <exceptions>
+        When performance optimizations would significantly increase complexity or
+        reduce readability, a trade-off discussion may be warranted.
+      </exceptions>
+    </principle>
+
+    <principle priority="medium">
+      <name>Clear and Constructive Feedback</name>
+      <description>
+        All critique must be specific, actionable, and focused on the code,
+        not the person who wrote it.
+      </description>
+      <rationale>
+        Constructive feedback helps developers improve and fosters a positive
+        development culture. Personal criticism creates defensiveness and
+        hinders collaboration.
+      </rationale>
+      <exceptions>None - Always maintain professional tone</exceptions>
+    </principle>
+  </general_principles>
+
+  <code_conventions>
+    <convention category="naming">
+      <rule>Follow language and framework naming conventions</rule>
+      <examples>
+        <good>
+          <language>JavaScript/TypeScript</language>
+          <example>camelCase for variables and functions, PascalCase for classes</example>
+        </good>
+        <good>
+          <language>Python</language>
+          <example>snake_case for variables and functions, PascalCase for classes</example>
+        </good>
+        <good>
+          <language>Go</language>
+          <example>camelCase for exported, PascalCase for types</example>
+        </good>
+        <bad>Inconsistent naming within same file</bad>
+        <bad>Abbreviations without clear meaning</bad>
+      </examples>
+    </convention>
+
+    <convention category="structure">
+      <rule>Organize code logically and follow separation of concerns</rule>
+      <guidelines>
+        <guideline>Keep functions focused and small (single responsibility)</guideline>
+        <guideline>Group related functionality together</guideline>
+        <guideline>Use clear file and directory organization</guideline>
+        <guideline>Avoid deeply nested code structures</guideline>
+      </guidelines>
+    </convention>
+
+    <convention category="documentation">
+      <rule>Document non-obvious code and public APIs</rule>
+      <guidelines>
+        <guideline>Use JSDoc/DocBlock comments for functions</guideline>
+        <guideline>Explain "why" not just "what" in comments</guideline>
+        <guideline>Keep comments up-to-date with code changes</guideline>
+        <guideline>Avoid commenting obvious code (self-documenting code is better)</guideline>
+      </guidelines>
+    </convention>
+
+    <convention category="error_handling">
+      <rule>Handle errors gracefully and appropriately</rule>
+      <guidelines>
+        <guideline>Never silently ignore errors</guideline>
+        <guideline>Use appropriate error types and messages</guideline>
+        <guideline>Log errors with sufficient context</guideline>
+        <guideline>Provide recovery paths when possible</guideline>
+        <guideline>Validate inputs before processing</guideline>
+      </guidelines>
+    </convention>
+  </code_conventions>
+
+  <security_checklist>
+    <category name="input_validation">
+      <item>All user inputs are validated and sanitized</item>
+      <item>Type checking is performed on all inputs</item>
+      <item>Length limits are enforced on string inputs</item>
+      <item>Allowed characters are restricted where appropriate</item>
+    </category>
+
+    <category name="data_protection">
+      <item>Sensitive data is never logged</item>
+      <item>Passwords are never stored in plain text</item>
+      <item>API keys and secrets use environment variables</item>
+      <item>PII (Personally Identifiable Information) is handled appropriately</item>
+      <item>Encryption is used for sensitive data at rest and in transit</item>
+    </category>
+
+    <category name="authentication_authorization">
+      <item>Authentication is properly implemented</item>
+      <item>Authorization checks exist on protected endpoints</item>
+      <item>Session management is secure</item>
+      <item>Token handling follows security best practices</item>
+      <item>Rate limiting is implemented where appropriate</item>
+    </category>
+
+    <category name="common_vulnerabilities">
+      <item>No SQL injection vulnerabilities</item>
+      <item>No XSS (Cross-Site Scripting) vulnerabilities</item>
+      <item>No CSRF (Cross-Site Request Forgery) vulnerabilities</item>
+      <item>No command injection vulnerabilities</item>
+      <item>No path traversal vulnerabilities</item>
+      <item>No insecure deserialization</item>
+      <item>No hardcoded credentials or secrets</item>
+    </category>
+  </security_checklist>
+
+  <performance_checklist>
+    <category name="database_operations">
+      <item>Queries use appropriate indexes</item>
+      <item>N+1 query problem is avoided</item>
+      <item>Pagination is implemented for large result sets</item>
+      <item>Unnecessary database calls are eliminated</item>
+      <item>Connection pooling is used where appropriate</item>
+    </category>
+
+    <category name="algorithm_efficiency">
+      <item>Time complexity is appropriate for the problem</item>
+      <item>Space complexity is reasonable</item>
+      <item>Caching is used for expensive operations</item>
+      <item>Redundant calculations are avoided</item>
+      <item>Appropriate data structures are selected</item>
+    </category>
+
+    <category name="resource_management">
+      <item>File handles and connections are properly closed</item>
+      <item>Memory leaks are avoided</item>
+      <item>Large objects are not held longer than necessary</item>
+      <item>Event listeners are removed when no longer needed</item>
+      <item>Timeouts are set for network operations</item>
+    </category>
+  </performance_checklist>
+
+  <common_pitfalls>
+    <pitfall>
+      <description>Accepting code that "mostly works"</description>
+      <why_problematic>
+        Code that mostly works often has edge cases that will fail in production.
+        These failures are harder to debug and more costly to fix later.
+      </why_problematic>
+      <correct_approach>
+        Require comprehensive testing and thorough review before accepting any code.
+        If edge cases are identified, they must be tested and handled.
+      </correct_approach>
+    </pitfall>
+
+    <pitfall>
+      <description>Rushing the review process</description>
+      <why_problematic>
+        Quick reviews miss subtle bugs, security issues, and design problems.
+        The cost of fixing issues in production far exceeds the cost of thorough review.
+      </why_problematic>
+      <correct_approach>
+        Take the time to understand the full context of changes.
+        Review related files and consider the impact on the entire system.
+      </correct_approach>
+    </pitfall>
+
+    <pitfall>
+      <description>Being too lenient on coding standards</description>
+      <why_problematic>
+        Inconsistent code becomes harder to maintain over time.
+        Technical debt accumulates and slows down future development.
+      </why_problematic>
+      <correct_approach>
+        Enforce project coding standards consistently.
+        If standards need improvement, address that separately from code reviews.
+      </correct_approach>
+    </pitfall>
+
+    <pitfall>
+      <description>Providing vague feedback</description>
+      <why_problematic>
+        Vague feedback like "this looks wrong" or "refactor this" doesn't
+        help developers understand what needs to change or why.
+      </why_problematic>
+      <correct_approach>
+        Be specific: "This function has a potential null reference on line 42.
+        Consider adding a null check or using optional chaining."
+      </correct_approach>
+    </pitfall>
+  </common_pitfalls>
+
+  <quality_checklist>
+    <category name="before_starting_review">
+      <item>Understand the purpose of the changes</item>
+      <item>Review the related issue or ticket</item>
+      <item>Check git diff for full context</item>
+      <item>Identify all affected files</item>
+      <item>Review related test files</item>
+    </category>
+
+    <category name="during_code_review">
+      <item>Check for syntax errors</item>
+      <item>Verify logic correctness</item>
+      <item>Assess security vulnerabilities</item>
+      <item>Evaluate performance implications</item>
+      <item>Verify coding standards compliance</item>
+      <item>Check test coverage</item>
+      <item>Review error handling</item>
+      <item>Assess maintainability</item>
+    </category>
+
+    <category name="during_test_execution">
+      <item>Run full test suite</item>
+      <item>Verify all tests pass</item>
+      <item>Check test coverage reports</item>
+      <item>Run linters if configured</item>
+      <item>Verify build succeeds</item>
+    </category>
+
+    <category name="before_approval">
+      <item>All critical issues are resolved</item>
+      <item>All tests pass successfully</item>
+      <item>Code follows project standards</item>
+      <item>Documentation is updated if needed</item>
+      <item>Changes are ready for deployment</item>
+    </category>
+  </quality_checklist>
+</best_practices>

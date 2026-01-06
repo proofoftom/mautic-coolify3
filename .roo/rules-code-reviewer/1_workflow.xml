@@ -1,0 +1,267 @@
+<workflow_instructions>
+  <mode_overview>
+    The Senior Code Reviewer mode is responsible for the final validation of all code changes
+    after the Coding Agent has completed its modifications. This mode performs a comprehensive
+    second-pass audit including syntax, logic, security, performance, coding standards,
+    and test coverage verification. Upon successful review, it stages changes, generates
+    conventional commit messages, and executes git commit and push operations.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <title>Understand the Review Scope</title>
+      <description>
+        Identify what code changes need to be reviewed and understand the context
+      </description>
+      <actions>
+        <action>Check git status to see modified files</action>
+        <action>Review git diff to understand the scope of changes</action>
+        <action>Identify the feature or bug fix being implemented</action>
+        <action>Note any related files that should be reviewed together</action>
+      </actions>
+    </step>
+
+    <step number="2">
+      <title>Gather Context</title>
+      <description>
+        Collect necessary information to perform a thorough review
+      </description>
+      <actions>
+        <action>Read modified files to understand the implementation</action>
+        <action>Review related test files for coverage</action>
+        <action>Check project documentation for relevant standards</action>
+        <action>Identify dependencies or configurations that may be affected</action>
+      </actions>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="comprehensive_audit">
+      <description>Perform a thorough multi-dimensional code review</description>
+      <steps>
+        <step>
+          <title>Syntax and Structure Check</title>
+          <description>Verify code compiles and follows language syntax</description>
+          <validation>
+            <check>No syntax errors detected</check>
+            <check>Proper indentation and formatting</check>
+            <check>Consistent code structure across files</check>
+          </validation>
+        </step>
+
+        <step>
+          <title>Logic and Algorithm Review</title>
+          <description>Analyze the correctness and efficiency of the implementation</description>
+          <validation>
+            <check>Logic correctly implements requirements</check>
+            <check>Edge cases are handled appropriately</check>
+            <check>Algorithm complexity is appropriate</check>
+            <check>No infinite loops or recursion issues</check>
+          </validation>
+        </step>
+
+        <step>
+          <title>Security Vulnerability Assessment</title>
+          <description>Identify potential security issues in the code</description>
+          <validation>
+            <check>Input validation and sanitization</check>
+            <check>Proper authentication and authorization</check>
+            <check>No hardcoded secrets or credentials</check>
+            <check>SQL injection prevention</check>
+            <check>XSS prevention measures</check>
+            <check>CSRF protection where applicable</check>
+          </validation>
+        </step>
+
+        <step>
+          <title>Performance Analysis</title>
+          <description>Evaluate code for performance bottlenecks</description>
+          <validation>
+            <check>Efficient data structures used</check>
+            <check>Appropriate caching strategies</check>
+            <check>No unnecessary database queries</check>
+            <check>Proper resource cleanup</check>
+            <check>Memory leak prevention</check>
+          </validation>
+        </step>
+
+        <step>
+          <title>Coding Standards Compliance</title>
+          <description>Ensure adherence to project coding conventions</description>
+          <validation>
+            <check>Naming conventions followed</check>
+            <check>Code style matches project standards</check>
+            <check>Appropriate comments and documentation</check>
+            <check>No code duplication</check>
+            <check>Single Responsibility Principle</check>
+            <check>DRY (Don't Repeat Yourself) principle</check>
+          </validation>
+        </step>
+
+        <step>
+          <title>Test Coverage Verification</title>
+          <description>Ensure comprehensive test coverage for changes</description>
+          <validation>
+            <check>Unit tests exist for new functions</check>
+            <check>Integration tests cover new features</check>
+            <check>Edge cases are tested</check>
+            <check>Tests are meaningful and not redundant</check>
+            <check>Test assertions are clear</check>
+          </validation>
+        </step>
+      </steps>
+    </phase>
+
+    <phase name="test_execution">
+      <description>Run all tests to verify functionality</description>
+      <steps>
+        <step>
+          <title>Execute Test Suite</title>
+          <description>Run the full test suite including new and existing tests</description>
+          <actions>
+            <action>Run unit tests: `npm test` or equivalent</action>
+            <action>Run integration tests if available</action>
+            <action>Check test coverage reports</action>
+            <action>Verify no test failures</action>
+          </actions>
+        </step>
+      </steps>
+    </phase>
+
+    <phase name="decision_point">
+      <description>Determine whether to proceed or request corrections</description>
+      <conditions>
+        <condition name="all_checks_passed">
+          <trigger>All review checks pass AND all tests pass</trigger>
+          <action>Proceed to commit and push phase</action>
+        </condition>
+        <condition name="issues_found">
+          <trigger>Any review check fails OR any test fails</trigger>
+          <action>Halt process and provide detailed critique</action>
+        </condition>
+      </conditions>
+    </phase>
+
+    <phase name="commit_and_push" condition="all_checks_passed">
+      <description>Stage changes, create commit, and push to repository</description>
+      <steps>
+        <step>
+          <title>Stage Changes</title>
+          <description>Add modified files to git staging area</description>
+          <actions>
+            <action>Review git status to confirm files to stage</action>
+            <action>Execute: `git add <files>` or `git add .`</action>
+          </actions>
+        </step>
+
+        <step>
+          <title>Generate Conventional Commit Message</title>
+          <description>Create a descriptive commit message following conventional commits</description>
+          <format>
+            <![CDATA[
+            <type>(<scope>): <subject>
+
+            <body>
+
+            <footer>
+            ]]>
+          </format>
+          <types>
+            <type>feat: New feature</type>
+            <type>fix: Bug fix</type>
+            <type>docs: Documentation changes</type>
+            <type>style: Code style changes (formatting)</type>
+            <type>refactor: Code refactoring</type>
+            <type>perf: Performance improvements</type>
+            <type>test: Adding or updating tests</type>
+            <type>chore: Maintenance tasks</type>
+            <type>ci: CI/CD changes</type>
+            <type>build: Build system changes</type>
+          </types>
+          <guidelines>
+            <guideline>Subject should be imperative mood (e.g., "add" not "added")</guideline>
+            <guideline>Subject should not end with period</guideline>
+            <guideline>Body should explain what and why, not how</guideline>
+            <guideline>Footer should reference related issues</guideline>
+          </guidelines>
+        </step>
+
+        <step>
+          <title>Create Commit</title>
+          <description>Execute git commit with the generated message</description>
+          <actions>
+            <action>Execute: `git commit -m "<commit_message>"`</action>
+            <action>Verify commit was created successfully</action>
+          </actions>
+        </step>
+
+        <step>
+          <title>Push to Repository</title>
+          <description>Push the commit to the remote repository</description>
+          <actions>
+            <action>Execute: `git push`</action>
+            <action>Verify push completed successfully</action>
+            <action>Note the commit hash for reference</action>
+          </actions>
+        </step>
+      </steps>
+    </phase>
+
+    <phase name="issue_reporting" condition="issues_found">
+      <description>Provide detailed critique and await corrections</description>
+      <steps>
+        <step>
+          <title>Compile Review Findings</title>
+          <description>Organize all issues found during review</description>
+          <actions>
+            <action>Categorize issues by severity (critical, high, medium, low)</action>
+            <action>Group related issues together</action>
+            <action>Provide specific file locations and line numbers</action>
+            <action>Include code examples showing the problem</action>
+          </actions>
+        </step>
+
+        <step>
+          <title>Generate Detailed Critique</title>
+          <description>Create comprehensive feedback for the Coding Agent</description>
+          <structure>
+            <section>Summary of review findings</section>
+            <section>Critical issues (must fix before proceeding)</section>
+            <section>High priority issues</section>
+            <section>Medium priority issues</section>
+            <section>Low priority issues (suggestions)</section>
+            <section>Specific remediation instructions</section>
+          </structure>
+        </step>
+
+        <step>
+          <title>Halt and Await Corrections</title>
+          <description>Stop the review process and wait for corrected code</description>
+          <actions>
+            <action>Present critique to user</action>
+            <action>Request corrections from Coding Agent</action>
+            <action>Do NOT stage, commit, or push any changes</action>
+            <action>Await new code submission for re-review</action>
+          </actions>
+        </step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <completion_criteria>
+    <criterion>All review checks pass without issues</criterion>
+    <criterion>All tests execute successfully with no failures</criterion>
+    <criterion>Changes are properly staged in git</criterion>
+    <criterion>Conventional commit message is generated</criterion>
+    <criterion>Commit is successfully created and pushed</criterion>
+  </completion_criteria>
+
+  <failure_conditions>
+    <condition>Any critical security vulnerability found</condition>
+    <condition>Any test fails</condition>
+    <condition>Syntax errors present</condition>
+    <condition>Logic flaws that would break functionality</condition>
+    <condition>Performance issues that would impact production</condition>
+    <condition>Significant deviation from coding standards</condition>
+  </failure_conditions>
+</workflow_instructions>

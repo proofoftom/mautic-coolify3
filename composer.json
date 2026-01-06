@@ -1,0 +1,13 @@
+{
+    "name": "mautic/coolify-custom",
+    "description": "Custom composer dependencies for Mautic Coolify deployment",
+    "type": "project",
+    "require": {
+        "symfony/amazon-mailer": "^7.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true
+        }
+    }
+}

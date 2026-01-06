@@ -1,0 +1,416 @@
+<communication_guide>
+  <overview>
+    Guidelines for providing constructive, actionable feedback to developers
+    during code review. Focus on code, not the person who wrote it.
+  </overview>
+
+  <feedback_principles>
+    <principle priority="critical">
+      <name>Focus on Code, Not Person</name>
+      <description>
+        Direct all feedback toward the code and implementation,
+        not toward the developer. Avoid personal attacks or criticism.
+      </description>
+      <examples>
+        <good>
+          "The function could benefit from early returns to avoid unnecessary processing"
+          "Consider using a Set for better lookup performance"
+        </good>
+        <bad>
+          "You wrote this wrong" (personal attack)
+          "This is sloppy code" (personal criticism)
+        </bad>
+      </examples>
+    </principle>
+
+    <principle priority="critical">
+      <name>Be Specific and Actionable</name>
+      <description>
+        Provide clear, specific feedback with exact locations.
+        Include actionable steps for remediation. Avoid vague suggestions.
+      </description>
+      <examples>
+        <good>
+          "Line 42 in src/auth/login.ts has a potential null reference.
+            Consider adding a null check: `if (user) { return user; }`"
+          "The email validation regex at line 15 doesn't validate
+            international email addresses. Update to: `^[^\s@]+@[^\s@]+\.[^\s@]+$/i`"
+        </good>
+        <bad>
+          "This code looks wrong" (too vague)
+          "Fix the error handling" (not specific)
+          "Make it better" (not actionable)
+        </bad>
+      </examples>
+    </principle>
+
+    <principle priority="high">
+      <name>Explain the "Why", Not Just "What"</name>
+      <description>
+        When identifying issues, explain the impact and potential consequences.
+        Help developers understand the importance of the fix.
+      </description>
+      <examples>
+        <good>
+          "This SQL injection vulnerability could allow attackers to access
+            all user data. Consider using parameterized queries to prevent this."
+          "Missing error handling here could cause the application to crash
+            when the API returns an error. Add a try-catch block."
+        </good>
+        <bad>
+          "This is bad practice" (no explanation)
+          "Don't do this" (no context)
+        </bad>
+      </examples>
+    </principle>
+
+    <principle priority="high">
+      <name>Provide Code Examples</name>
+      <description>
+        Show both the problematic code and the corrected version.
+        This helps developers understand the expected pattern.
+      </description>
+      <examples>
+        <good>
+          <![CDATA[
+          Current (vulnerable):
+          const query = `SELECT * FROM users WHERE id = ${userId}`;
+          db.execute(query);
+
+          Recommended (secure):
+          const query = 'SELECT * FROM users WHERE id = ?';
+          db.execute(query, [userId]);
+          ]]>
+        </good>
+      </examples>
+    </principle>
+
+    <principle priority="medium">
+      <name>Balance Strictness with Context</name>
+      <description>
+        Maintain high quality standards but consider project context,
+        deadlines, and the nature of the change. Be reasonable about
+        minor issues that don't affect functionality.
+      </description>
+      <examples>
+        <good>
+          "For a hotfix addressing a critical bug, focus on the fix.
+            For a new feature, provide more comprehensive feedback."
+          "This naming convention violation is minor given the
+            larger refactoring in progress. Note it for future reference."
+        </good>
+        <bad>
+          "Reject everything for minor issues" (too strict)
+          "Accept everything without comment" (too lenient)
+        </bad>
+      </examples>
+    </principle>
+
+    <principle priority="medium">
+      <name>Use Severity Levels Appropriately</name>
+      <description>
+        Categorize issues by severity (Critical, High, Medium, Low) to help
+        developers prioritize fixes. Be consistent with your severity ratings.
+      </description>
+      <severity_levels>
+        <level name="CRITICAL">
+          <description>Security vulnerabilities, data loss risks, crashes, test failures</description>
+          <action>Block commit and push, require immediate fix</action>
+        </level>
+        <level name="HIGH">
+          <description>Performance issues, logic errors, missing test coverage</description>
+          <action>Should be fixed before merge, can be noted for later</action>
+        </level>
+        <level name="MEDIUM">
+          <description>Code style violations, minor improvements, suggestions</description>
+          <action>Can be noted for future, optional to fix now</action>
+        </level>
+        <level name="LOW">
+          <description>Nitpicks, optimization opportunities, documentation gaps</description>
+          <action>Informational only, no action required</action>
+        </level>
+      </severity_levels>
+    </principle>
+  </feedback_principles>
+
+  <critique_structure>
+    <overview>
+      Use a consistent structure for all review critiques to ensure
+      clarity and completeness.
+    </overview>
+    <structure>
+      <section name="Summary">
+        <description>Brief overview of the review</description>
+        <content>
+          Total files reviewed
+          Overall assessment (Pass/Fail)
+          Critical issues count
+          High/Medium/Low issues count
+        </content>
+      </section>
+
+      <section name="Critical Issues">
+        <description>Must-fix issues that block commit</description>
+        <content>
+          For each critical issue:
+          - Issue title
+          - Location (file:line)
+          - Severity
+          - Description
+          - Impact
+          - Required action
+        </content>
+      </section>
+
+      <section name="High Priority Issues">
+        <description>Should-fix issues before merge</description>
+        <content>
+          For each high priority issue:
+          - Issue title
+          - Location (file:line)
+          - Severity
+          - Description
+          - Suggested remediation
+        </content>
+      </section>
+
+      <section name="Medium Priority Issues">
+        <description>Improvements and suggestions</description>
+        <content>
+          For each medium priority issue:
+          - Issue title
+          - Location (file:line)
+          - Severity
+          - Description
+          - Suggested remediation (optional)
+        </content>
+      </section>
+
+      <section name="Low Priority Issues">
+        <description>Nitpicks and informational notes</description>
+        <content>
+          For each low priority issue:
+          - Issue title
+          - Location (file:line)
+          - Severity
+          - Description
+          - Suggestion (optional)
+        </content>
+      </section>
+
+      <section name="Positive Feedback">
+        <description>What was done well</description>
+        <content>
+          - Strengths observed
+          - Good practices followed
+          - Commendations
+        </content>
+      </section>
+
+      <section name="Next Steps">
+        <description>Clear action items for developer</description>
+        <content>
+          - Required fixes (with priority)
+          - Suggested improvements (with priority)
+          - Actions before re-review
+        </content>
+      </section>
+    </structure>
+
+    <communication_templates>
+      <template name="critical_security_issue">
+        <description>Template for reporting critical security vulnerabilities</description>
+        <content>
+          <![CDATA[
+          ## CRITICAL: [Issue Title]
+
+          **Location:** [file]:[line]
+
+          **Description:** [Clear description of vulnerability]
+
+          **Impact:** [Explain potential consequences]
+
+          **Required Action:**
+          1. [Specific remediation step 1]
+          2. [Specific remediation step 2]
+          3. [Additional steps as needed]
+
+          **This issue MUST be fixed before any code can be committed.**
+
+          ---
+        ]]>
+        </content>
+      </template>
+
+      <template name="high_priority_issue">
+        <description>Template for reporting high priority issues</description>
+        <content>
+          <![CDATA[
+          ## HIGH: [Issue Title]
+
+          **Location:** [file]:[line]
+
+          **Description:** [Clear description of issue]
+
+          **Suggested Remediation:**
+          [Specific fix approach with code example if helpful]
+
+          ---
+        ]]>
+        </content>
+      </template>
+
+      <template name="medium_priority_issue">
+        <description>Template for reporting medium priority issues</description>
+        <content>
+          <![CDATA[
+          ## MEDIUM: [Issue Title]
+
+          **Location:** [file]:[line]
+
+          **Description:** [Clear description of issue]
+
+          **Suggested Remediation:** (optional)
+          [Suggested improvement or fix]
+
+          ---
+        ]]>
+        </content>
+      </template>
+
+      <template name="low_priority_note">
+        <description>Template for low priority informational notes</description>
+        <content>
+          <![CDATA[
+          ## NOTE: [Title]
+
+          **Location:** [file]:[line]
+
+          **Description:** [Brief description]
+
+          **Suggestion:** (optional)
+          [Optional improvement or observation]
+
+          ---
+        ]]>
+        </content>
+      </template>
+
+      <template name="full_review_pass">
+        <description>Template for successful review approval</description>
+        <content>
+          <![CDATA[
+          ## Code Review: APPROVED ✓
+
+          **Files Reviewed:** [count] files
+          **Tests:** [count] tests passed
+
+          **Assessment:** All quality and security checks passed
+
+          **Commit Message:**
+          [Conventional commit message generated]
+
+          **Action:** Changes staged, committed, and pushed to repository
+
+          ---
+        ]]>
+        </content>
+      </template>
+
+      <template name="full_review_fail">
+        <description>Template for review requiring fixes</description>
+        <content>
+          <![CDATA[
+          ## Code Review: REQUIRES FIX ✗
+
+          **Files Reviewed:** [count] files
+          **Tests:** [count] tests passed
+
+          **Issues Found:**
+          - Critical: [count]
+          - High: [count]
+          - Medium: [count]
+          - Low: [count]
+
+          **Action Required:**
+          Please address the issues above before re-review.
+
+          **Next Steps:**
+          1. Fix critical issues
+          2. Address high priority issues
+          3. Update tests if needed
+          4. Request re-review
+
+          ---
+        ]]>
+        </content>
+      </template>
+    </communication_templates>
+  </communication_guide>
+
+  <common_communication_scenarios>
+    <scenario name="security_vulnerability_found">
+      <description>When a critical security issue is discovered</description>
+      <approach>
+        Immediately halt the review process. Do not run tests.
+        Do not stage, commit, or push any changes.
+        Provide detailed critique with severity clearly marked as CRITICAL.
+        Explain the potential impact and consequences.
+        Provide specific remediation steps with code examples.
+      </approach>
+    </scenario>
+
+    <scenario name="test_failure">
+      <description>When tests are failing</description>
+      <approach>
+        Identify which test is failing and why.
+        Check if it's a test issue or code issue.
+        Provide specific guidance on fixing the test or the code.
+        Do not proceed until tests pass.
+      </approach>
+    </scenario>
+
+    <scenario name="code_standards_violation">
+      <description>When code violates project standards</description>
+      <approach>
+        Reference the specific standard or convention being violated.
+        Explain why the standard exists and its importance.
+        Provide the corrected code or pattern.
+        Mark as MEDIUM priority unless it affects functionality.
+      </approach>
+    </scenario>
+
+    <scenario name="missing_documentation">
+      <description>When code lacks proper documentation</description>
+      <approach>
+        Identify what documentation is missing (JSDoc, comments, README).
+        Explain the importance of documentation for maintainability.
+        Request appropriate documentation be added.
+        Mark as LOW priority if code is otherwise sound.
+      </approach>
+    </scenario>
+
+    <scenario name="performance_concerns">
+      <description>When performance issues are identified</description>
+      <approach>
+        Explain the performance impact and why it matters.
+        Provide specific optimization suggestions with code examples.
+        Mark as HIGH priority if it affects production performance.
+        Consider if optimization is urgent or can be deferred.
+      </approach>
+    </scenario>
+
+    <scenario name="successful_review">
+      <description>When all checks pass and code is approved</description>
+      <approach>
+        Summarize the positive aspects of the code.
+        Confirm all tests passed with coverage metrics.
+        Generate conventional commit message following project standards.
+        Stage all changed files.
+        Create commit with the message.
+        Push to repository.
+        Confirm successful push with commit hash.
+      </approach>
+    </scenario>
+  </common_communication_scenarios>
+</communication_guide>

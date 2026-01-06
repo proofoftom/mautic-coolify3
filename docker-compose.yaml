@@ -1,0 +1,190 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mariadb:10.11
+    container_name: mautic-mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SERVICE_PASSWORD_64_MYSQLROOT}
+      MYSQL_DATABASE: mautic
+      MYSQL_USER: ${SERVICE_USER_MYSQL}
+      MYSQL_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${SERVICE_PASSWORD_64_MYSQLROOT}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mautic-network
+
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: mautic-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${SERVICE_USER_RABBITMQ:-mautic}
+      RABBITMQ_DEFAULT_PASS: ${SERVICE_PASSWORD_64_RABBITMQ}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mautic-network
+
+  mautic_web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mautic-web
+    restart: unless-stopped
+    environment:
+      MAUTIC_DB_HOST: mysql
+      MAUTIC_DB_PORT: 3306
+      MAUTIC_DB_NAME: mautic
+      MAUTIC_DB_USER: ${SERVICE_USER_MYSQL}
+      MAUTIC_DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
+      MAUTIC_DB_TABLE_PREFIX: mautic_
+      MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_80}
+      MAUTIC_TRUSTED_PROXIES: 0
+      DOCKER_MAUTIC_RUN_MIGRATIONS: "true"
+      PHP_MEMORY_LIMIT: 256M
+      PHP_UPLOAD_MAX_FILESIZE: 100M
+      PHP_POST_MAX_SIZE: 100M
+    volumes:
+      - config:/var/www/html/docroot/app/config
+      - logs:/var/www/html/docroot/var/log
+      - media:/var/www/html/docroot/media
+      - cache:/var/www/html/docroot/var/cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - mautic-network
+
+  mautic_cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mautic-cron
+    restart: unless-stopped
+    environment:
+      MAUTIC_DB_HOST: mysql
+      MAUTIC_DB_PORT: 3306
+      MAUTIC_DB_NAME: mautic
+      MAUTIC_DB_USER: ${SERVICE_USER_MYSQL}
+      MAUTIC_DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
+      MAUTIC_DB_TABLE_PREFIX: mautic_
+      MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_80}
+      MAUTIC_TRUSTED_PROXIES: 0
+      DOCKER_MAUTIC_RUN_MIGRATIONS: "true"
+      PHP_MEMORY_LIMIT: 256M
+    volumes:
+      - config:/var/www/html/docroot/app/config
+      - logs:/var/www/html/docroot/var/log
+      - cache:/var/www/html/docroot/var/cache
+    command: >
+      bash -c "while true; do
+        php /var/www/html/docroot/bin/console mautic:segments:update
+        php /var/www/html/docroot/bin/console mautic:campaigns:trigger
+        php /var/www/html/docroot/bin/console mautic:emails:send
+        sleep 300
+      done"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - mautic-network
+
+  mautic_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mautic-worker
+    restart: unless-stopped
+    environment:
+      MAUTIC_DB_HOST: mysql
+      MAUTIC_DB_PORT: 3306
+      MAUTIC_DB_NAME: mautic
+      MAUTIC_DB_USER: ${SERVICE_USER_MYSQL}
+      MAUTIC_DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
+      MAUTIC_DB_TABLE_PREFIX: mautic_
+      MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_80}
+      MAUTIC_TRUSTED_PROXIES: 0
+      DOCKER_MAUTIC_RUN_MIGRATIONS: "true"
+      PHP_MEMORY_LIMIT: 256M
+    volumes:
+      - config:/var/www/html/docroot/app/config
+      - logs:/var/www/html/docroot/var/log
+      - cache:/var/www/html/docroot/var/cache
+    command: >
+      bash -c "while true; do
+        php /var/www/html/docroot/bin/console messenger:consume mautic --time-limit=300 --memory-limit=256M
+      done"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - mautic-network
+
+volumes:
+  mariadb-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/mariadb-data
+  rabbitmq-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/rabbitmq-data
+  config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/config
+  logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/logs
+  media:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/media
+  cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/cache
+
+networks:
+  mautic-network:
+    driver: bridge

@@ -1,0 +1,501 @@
+<common_patterns>
+  <overview>
+    Common patterns and issues found during code reviews, with examples of
+    problems and their correct implementations.
+  </overview>
+
+  <security_patterns>
+    <pattern name="sql_injection">
+      <description>SQL injection vulnerabilities from unescaped user input</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // VULNERABLE: Direct string concatenation
+        const query = "SELECT * FROM users WHERE id = " + userId;
+        db.execute(query);
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // SECURE: Parameterized queries
+        const query = "SELECT * FROM users WHERE id = ?";
+        db.execute(query, [userId]);
+        ]]>
+      </example_good>
+      <remediation>Use parameterized queries or prepared statements</remediation>
+    </pattern>
+
+    <pattern name="xss_vulnerability">
+      <description>Cross-site scripting from unescaped user input</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // VULNERABLE: Unescaped user input
+        const userHtml = "<div>" + userInput + "</div>";
+        element.innerHTML = userHtml;
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // SECURE: Proper escaping or sanitization
+        const userHtml = sanitizer.sanitize(userInput);
+        element.textContent = userInput; // or use textContent
+        ]]>
+      </example_good>
+      <remediation>Sanitize input and use safe DOM APIs</remediation>
+    </pattern>
+
+    <pattern name="hardcoded_secrets">
+      <description>Credentials or API keys committed to code</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // VULNERABLE: Hardcoded API key
+        const apiKey = "sk_live_1234567890abcdef";
+        const client = new StripeClient(apiKey);
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // SECURE: Environment variable
+        const apiKey = process.env.STRIPE_API_KEY;
+        const client = new StripeClient(apiKey);
+        ]]>
+      </example_good>
+      <remediation>Use environment variables for all secrets</remediation>
+    </pattern>
+
+    <pattern name="missing_authentication">
+      <description>Endpoints lack proper authentication checks</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // VULNERABLE: No auth check
+        app.get('/admin/users', (req, res) => {
+          const users = db.getAllUsers();
+          res.json(users);
+        });
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // SECURE: Authentication middleware
+        app.get('/admin/users', authenticateAdmin, (req, res) => {
+          const users = db.getAllUsers();
+          res.json(users);
+        });
+        ]]>
+      </example_good>
+      <remediation>Add authentication middleware to protected routes</remediation>
+    </pattern>
+  </security_patterns>
+
+  <performance_patterns>
+    <pattern name="n_plus_one_query">
+      <description>Database query inside loop causing N+1 problem</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // INEFFICIENT: N+1 query problem
+        const users = userIds.map(id => {
+          return db.query('SELECT * FROM users WHERE id = ' + id);
+        });
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // EFFICIENT: Single query with IN clause
+        const users = db.query(
+          'SELECT * FROM users WHERE id IN (?)',
+          [userIds.join(',')]
+        );
+        ]]>
+      </example_good>
+      <remediation>Use single query with WHERE IN clause</remediation>
+    </pattern>
+
+    <pattern name="missing_caching">
+      <description>Expensive operations called repeatedly without caching</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // INEFFICIENT: No caching
+        function getUserProfile(userId) {
+          return db.query('SELECT * FROM profiles WHERE user_id = ?', [userId]);
+        }
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // EFFICIENT: Cached results
+        const cache = new Map();
+        function getUserProfile(userId) {
+          if (cache.has(userId)) {
+            return cache.get(userId);
+          }
+          const profile = db.query('SELECT * FROM profiles WHERE user_id = ?', [userId]);
+          cache.set(userId, profile);
+          return profile;
+        }
+        ]]>
+      </example_good>
+      <remediation>Implement caching for frequently accessed data</remediation>
+    </pattern>
+
+    <pattern name="memory_leak">
+      <description>Resources not properly cleaned up</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // LEAK: Event listeners not removed
+        function setupButton() {
+          button.addEventListener('click', handleClick);
+        }
+        // Button recreated but listener not removed
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // CLEAN: Proper cleanup
+        let clickHandler;
+        function setupButton() {
+          clickHandler = handleClick;
+          button.addEventListener('click', clickHandler);
+        }
+        function cleanupButton() {
+          button.removeEventListener('click', clickHandler);
+        }
+        ]]>
+      </example_good>
+      <remediation>Always remove event listeners and clean up resources</remediation>
+    </pattern>
+  </performance_patterns>
+
+  <code_quality_patterns>
+    <pattern name="magic_numbers">
+      <description>Unnamed numeric constants without clear meaning</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // UNCLEAR: Magic numbers
+        function calculateDiscount(price) {
+          if (price > 100) {
+            return price * 0.9;
+          }
+          return price * 0.95;
+        }
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // CLEAR: Named constants
+        const DISCOUNT_THRESHOLD = 100;
+        const HIGH_DISCOUNT_RATE = 0.9;
+        const STANDARD_DISCOUNT_RATE = 0.95;
+
+        function calculateDiscount(price) {
+          if (price > DISCOUNT_THRESHOLD) {
+            return price * HIGH_DISCOUNT_RATE;
+          }
+          return price * STANDARD_DISCOUNT_RATE;
+        }
+        ]]>
+      </example_good>
+      <remediation>Extract magic numbers to named constants</remediation>
+    </pattern>
+
+    <pattern name="code_duplication">
+      <description>Same logic repeated in multiple places</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // DUPLICATED: Same validation logic repeated
+        function validateEmail(email) {
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return regex.test(email);
+        }
+
+        function validateUserEmail(userEmail) {
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return regex.test(userEmail);
+        }
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // DRY: Single validation function
+        const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        function validateEmail(email) {
+          return EMAIL_REGEX.test(email);
+        }
+
+        function validateUserEmail(userEmail) {
+          return validateEmail(userEmail);
+        }
+        ]]>
+      </example_good>
+      <remediation>Extract common logic into reusable functions</remediation>
+    </pattern>
+
+    <pattern name="deep_nesting">
+      <description>Excessive nesting making code hard to read</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // HARD TO READ: Deep nesting
+        function processUsers(users) {
+          users.forEach(user => {
+            if (user.active) {
+              user.roles.forEach(role => {
+                if (role.permissions) {
+                  role.permissions.forEach(perm => {
+                    if (perm.granted) {
+                      console.log(perm.name);
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // READABLE: Early returns and flat structure
+        function processUsers(users) {
+          return users
+            .filter(user => user.active)
+            .flatMap(user => user.roles)
+            .filter(role => role.permissions)
+            .flatMap(role => role.permissions)
+            .filter(perm => perm.granted)
+            .map(perm => perm.name);
+        }
+        ]]>
+      </example_good>
+      <remediation>Use early returns and functional programming</remediation>
+    </pattern>
+
+    <pattern name="inconsistent_error_handling">
+      <description>Mixed approaches to error handling</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // INCONSISTENT: Mixed error handling
+        function getData() {
+          try {
+            return fetch(url);
+          } catch (e) {
+            console.error(e); // Sometimes logged
+            throw e; // Sometimes thrown
+          }
+        }
+
+        function saveData(data) {
+          try {
+            return db.save(data);
+          } catch (e) {
+            return null; // Sometimes returns null
+          }
+        }
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // CONSISTENT: Unified error handling
+        class AppError extends Error {
+          constructor(message, code) {
+            super(message);
+            this.code = code;
+          }
+        }
+
+        function getData() {
+          try {
+            return fetch(url);
+          } catch (e) {
+            throw new AppError('Failed to fetch data', 'FETCH_ERROR');
+          }
+        }
+
+        function saveData(data) {
+          try {
+            return db.save(data);
+          } catch (e) {
+            throw new AppError('Failed to save data', 'SAVE_ERROR');
+          }
+        }
+        ]]>
+      </example_good>
+      <remediation>Establish consistent error handling patterns</remediation>
+    </pattern>
+  </code_quality_patterns>
+
+  <test_coverage_patterns>
+    <pattern name="missing_edge_case_tests">
+      <description>Tests don't cover boundary conditions</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // INCOMPLETE: Only happy path tested
+        test('calculates discount', () => {
+          expect(calculateDiscount(150)).toBe(135);
+        });
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // COMPLETE: Edge cases covered
+        describe('calculateDiscount', () => {
+          test('applies high discount for prices above threshold', () => {
+            expect(calculateDiscount(150)).toBe(135);
+          });
+
+          test('applies standard discount for prices at threshold', () => {
+            expect(calculateDiscount(100)).toBe(95);
+          });
+
+          test('applies standard discount for prices below threshold', () => {
+            expect(calculateDiscount(99)).toBe(94.05);
+          });
+
+          test('handles zero price', () => {
+            expect(calculateDiscount(0)).toBe(0);
+          });
+
+          test('handles negative price', () => {
+            expect(calculateDiscount(-10)).toBe(-9.5);
+          });
+        });
+        ]]>
+      </example_good>
+      <remediation>Test boundary values, nulls, and edge cases</remediation>
+    </pattern>
+
+    <pattern name="testing_implementation_details">
+      <description>Tests coupled to implementation rather than behavior</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // FRAGILE: Tests implementation details
+        test('sets user status to active', () => {
+          const user = new User();
+          user.setStatus('active');
+          expect(user.status).toBe('active');
+          expect(user._statusHistory).toEqual(['active']); // Implementation detail
+        });
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // ROBUST: Tests observable behavior
+        test('user status is reflected in isActive', () => {
+          const user = new User();
+          user.setStatus('active');
+          expect(user.isActive()).toBe(true); // Tests public interface
+        });
+        ]]>
+      </example_good>
+      <remediation>Test public interfaces, not private implementation</remediation>
+    </pattern>
+
+    <pattern name="no_async_error_handling_tests">
+      <description>Missing tests for error scenarios</description>
+      <example_bad language="javascript">
+        <![CDATA[
+        // INCOMPLETE: Only success cases tested
+        test('fetches user data', async () => {
+          const data = await fetchUser(123);
+          expect(data.id).toBe(123);
+        });
+        ]]>
+      </example_bad>
+      <example_good language="javascript">
+        <![CDATA[
+        // COMPLETE: Error cases tested
+        describe('fetchUser', () => {
+          test('fetches user data successfully', async () => {
+            const data = await fetchUser(123);
+            expect(data.id).toBe(123);
+          });
+
+          test('handles user not found error', async () => {
+            await expect(fetchUser(999)).rejects.toThrow('User not found');
+          });
+
+          test('handles network errors', async () => {
+            await expect(fetchUser(123)).rejects.toThrow('Network error');
+          });
+        });
+        ]]>
+      </example_good>
+      <remediation>Always test error paths and edge cases</remediation>
+    </pattern>
+  </test_coverage_patterns>
+
+  <conventional_commit_patterns>
+    <pattern name="feature_commit">
+      <description>New feature added to codebase</description>
+      <template>
+        <![CDATA[
+        feat(user-authentication): add login and registration endpoints
+
+        - Implement JWT-based authentication
+        - Add user registration with email verification
+        - Include password reset functionality
+
+        Closes #123
+        ]]>
+      </template>
+    </pattern>
+
+    <pattern name="bugfix_commit">
+      <description>Bug fix implemented</description>
+      <template>
+        <![CDATA[
+        fix(api): handle null response in user endpoint
+
+        - Prevents crash when API returns null
+        - Add proper error handling
+        - Update tests to cover null case
+
+        Fixes #456
+        ]]>
+      </template>
+    </pattern>
+
+    <pattern name="refactor_commit">
+      <description>Code refactored without behavior change</description>
+      <template>
+        <![CDATA[
+        refactor(auth): extract session management to separate module
+
+        - Move session logic to dedicated class
+        - Improve testability of authentication flow
+        - No functional changes
+
+        Related to #789
+        ]]>
+      </template>
+    </pattern>
+
+    <pattern name="docs_commit">
+      <description>Documentation updated</description>
+      <template>
+        <![CDATA[
+        docs(api): update authentication endpoint documentation
+
+        - Add examples for new login flow
+        - Document error response formats
+        - Update API specification
+
+        See #101
+        ]]>
+      </template>
+    </pattern>
+
+    <pattern name="test_commit">
+      <description>Tests added or updated</description>
+      <template>
+        <![CDATA[
+        test(auth): add tests for session timeout
+
+        - Test session expiration handling
+        - Verify token refresh flow
+        - Add coverage for edge cases
+
+        Related to #202
+        ]]>
+      </template>
+    </pattern>
+  </conventional_commit_patterns>
+</common_patterns>
