@@ -77,8 +77,11 @@ decode_base64_if_encoded() {
     local value="$1"
     local var_name="$2"
     
-    # Check if value looks like base64 (matches pattern with base64 characters)
-    if [[ "$value" =~ ^[A-Za-z0-9+/]+=*$ ]]; then
+    # Check if value looks like valid base64:
+    # - Contains base64-specific characters (+ or /), OR
+    # - Has padding (=) at the end
+    # Pure alphanumeric strings without padding are NOT considered base64
+    if [[ "$value" =~ [+/] ]] || [[ "$value" == *= ]]; then
         # Attempt to decode the value
         local decoded
         decoded=$(echo -n "$value" | base64 -d 2>/dev/null) && {
@@ -89,6 +92,9 @@ decode_base64_if_encoded() {
                 return 0
             fi
         }
+        echo "[mautic_entrypoint]: Base64 decoding failed for $var_name, using original value"
+    else
+        echo "[mautic_entrypoint]: $var_name does not appear to be base64-encoded, using as-is"
     fi
     
     # Return original value if decoding failed or not needed
