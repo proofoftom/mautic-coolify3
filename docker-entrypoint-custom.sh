@@ -64,9 +64,7 @@ run_automatic_install() {
     echo "[mautic_entrypoint]: Installing Mautic at: $SITE_URL"
     
     # Run Mautic installer via console command
-    cd /var/www/html/docroot
-    
-    php bin/console mautic:install "$SITE_URL" \
+    php /var/www/html/bin/console mautic:install "$SITE_URL" \
         --db_driver=pdo_mysql \
         --db_host="${MAUTIC_DB_HOST:-mysql}" \
         --db_port="${MAUTIC_DB_PORT:-3306}" \
