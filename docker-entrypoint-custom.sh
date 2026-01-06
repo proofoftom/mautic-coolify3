@@ -4,19 +4,77 @@ set -e
 # Custom Mautic entrypoint script
 # - Automatic installation on first deployment using environment variables
 # - Skip setup on subsequent deployments (only update code)
+# - File-based lock mechanism to prevent race conditions during installation
 
 # Configuration file locations
 LOCAL_CONFIG="/var/www/html/config/local.php"
 DOCROOT_LOCAL_CONFIG="/var/www/html/docroot/app/config/local.php"
 
+# Lock file mechanism constants
+INSTALL_LOCK_FILE="/var/www/html/config/.install-in-progress"
+INSTALL_MARKER_FILE="/var/www/html/config/.installed"
+INSTALL_LOCK_TIMEOUT=300  # 5 minutes in seconds
+
+# Acquire install lock using atomic mkdir operation
+# Returns: 0 on success, 1 if installation completed by another container, 2 on timeout
+acquire_install_lock() {
+    local lock_dir="$INSTALL_LOCK_FILE"
+    local elapsed=0
+    local sleep_interval=2
+    
+    echo "[mautic_entrypoint]: Attempting to acquire installation lock..."
+    
+    while [ $elapsed -lt $INSTALL_LOCK_TIMEOUT ]; do
+        # Check if installation marker exists (installation completed by another container)
+        if [ -f "$INSTALL_MARKER_FILE" ]; then
+            echo "[mautic_entrypoint]: Installation marker found - installation already completed by another container"
+            return 1
+        fi
+        
+        # Try to create lock directory atomically
+        if mkdir "$lock_dir" 2>/dev/null; then
+            echo "[mautic_entrypoint]: Installation lock acquired successfully"
+            return 0
+        fi
+        
+        # Lock held by another container, wait and retry
+        echo "[mautic_entrypoint]: Installation lock held by another container, waiting... (${elapsed}s elapsed)"
+        sleep $sleep_interval
+        elapsed=$((elapsed + sleep_interval))
+    done
+    
+    echo "[mautic_entrypoint]: Failed to acquire installation lock after ${elapsed}s (timeout)"
+    return 2
+}
+
+# Release install lock
+release_install_lock() {
+    local lock_dir="$INSTALL_LOCK_FILE"
+    
+    if [ -d "$lock_dir" ]; then
+        rmdir "$lock_dir" 2>/dev/null && echo "[mautic_entrypoint]: Installation lock released" || echo "[mautic_entrypoint]: Warning: Failed to release installation lock"
+    fi
+}
+
+# Create installation marker file
+create_install_marker() {
+    touch "$INSTALL_MARKER_FILE" && echo "[mautic_entrypoint]: Installation marker created" || echo "[mautic_entrypoint]: Warning: Failed to create installation marker"
+}
+
 is_installed() {
+    # First check for installation marker file (fastest check)
+    if [ -f "$INSTALL_MARKER_FILE" ]; then
+        echo "[mautic_entrypoint]: Installation detected via marker file"
+        return 0
+    fi
+    
     local db_host="${MAUTIC_DB_HOST:-mysql}"
     local db_user="$MAUTIC_DB_USER"
     local db_password="$MAUTIC_DB_PASSWORD"
     local db_name="${MAUTIC_DB_NAME:-mautic}"
     local db_table_prefix="${MAUTIC_DB_TABLE_PREFIX:-mautic_}"
     
-    # First check if database tables exist (more reliable than config files)
+    # Check if database tables exist (more reliable than config files)
     if [ -n "$db_user" ] && [ -n "$db_password" ]; then
         # Check for a core Mautic table like mautic_users
         local table_name="${db_table_prefix}users"
@@ -108,6 +166,8 @@ run_automatic_install() {
     
     if [ $install_result -eq 0 ]; then
         echo "[mautic_entrypoint]: Mautic installation completed successfully!"
+        # Create installation marker on success
+        create_install_marker
     else
         echo "[mautic_entrypoint]: Mautic installation failed with code: $install_result"
         exit $install_result
@@ -140,7 +200,37 @@ else
     # Check if we have required environment variables for automatic install
     if [ -n "$MAUTIC_DB_USER" ] && [ -n "$MAUTIC_DB_PASSWORD" ]; then
         echo "[mautic_entrypoint]: Database credentials found, running automatic installation..."
-        run_automatic_install
+        
+        # Acquire installation lock to prevent race conditions
+        acquire_install_lock
+        lock_result=$?
+        
+        case $lock_result in
+            0)
+                # Lock acquired, proceed with installation
+                echo "[mautic_entrypoint]: Proceeding with installation (lock holder)"
+                run_automatic_install
+                release_install_lock
+                ;;
+            1)
+                # Installation completed by another container
+                echo "[mautic_entrypoint]: Installation completed by another container, skipping..."
+                clear_cache
+                fix_permissions
+                ;;
+            2)
+                # Timeout waiting for lock
+                echo "[mautic_entrypoint]: Timeout waiting for installation lock, checking if installation completed..."
+                if is_installed; then
+                    echo "[mautic_entrypoint]: Installation completed by another container, proceeding..."
+                    clear_cache
+                    fix_permissions
+                else
+                    echo "[mautic_entrypoint]: Error: Installation not completed and lock timeout reached"
+                    exit 1
+                fi
+                ;;
+        esac
         
         echo "[mautic_entrypoint]: Starting Apache..."
         exec apache2-foreground
