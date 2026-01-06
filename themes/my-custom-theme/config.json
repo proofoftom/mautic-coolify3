@@ -4,6 +4,7 @@
     "authorEmail": "your.email@example.com",
     "description": "A custom Mautic theme with email templates",
     "version": "1.0.0",
+    "builder": ["legacy", "grapesjsbuilder"],
     "features": [
         "email"
     ],

@@ -4,6 +4,7 @@
   "authorUrl": "https://example.com",
   "description": "A custom Mautic page theme",
   "version": "1.0.0",
+  "builder": ["legacy", "grapesjsbuilder"],
   "features": [
     "page"
   ],
