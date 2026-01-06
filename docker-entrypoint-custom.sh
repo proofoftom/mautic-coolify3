@@ -10,9 +10,33 @@ LOCAL_CONFIG="/var/www/html/config/local.php"
 DOCROOT_LOCAL_CONFIG="/var/www/html/docroot/app/config/local.php"
 
 is_installed() {
+    local db_host="${MAUTIC_DB_HOST:-mysql}"
+    local db_user="$MAUTIC_DB_USER"
+    local db_password="$MAUTIC_DB_PASSWORD"
+    local db_name="${MAUTIC_DB_NAME:-mautic}"
+    local db_table_prefix="${MAUTIC_DB_TABLE_PREFIX:-mautic_}"
+    
+    # First check if database tables exist (more reliable than config files)
+    if [ -n "$db_user" ] && [ -n "$db_password" ]; then
+        # Check for a core Mautic table like mautic_users
+        local table_name="${db_table_prefix}users"
+        local table_exists
+        
+        table_exists=$(mysql -h"$db_host" -u"$db_user" -p"$db_password" -D"$db_name" -sN -e \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$db_name' AND table_name = '$table_name';" 2>/dev/null)
+        
+        if [ "$table_exists" = "1" ]; then
+            echo "[mautic_entrypoint]: Installation detected via database table '$table_name'"
+            return 0
+        fi
+    fi
+    
+    # Fallback to checking config files if database check fails
     if [ -f "$LOCAL_CONFIG" ] || [ -f "$DOCROOT_LOCAL_CONFIG" ]; then
+        echo "[mautic_entrypoint]: Installation detected via config files"
         return 0
     fi
+    
     return 1
 }
 
