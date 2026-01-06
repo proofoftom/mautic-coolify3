@@ -68,7 +68,7 @@ services:
       PHP_UPLOAD_MAX_FILESIZE: 100M
       PHP_POST_MAX_SIZE: 100M
     volumes:
-      - config:/var/www/html/docroot/app/config
+      - config:/var/www/html/config
       - logs:/var/www/html/docroot/var/log
       - media:/var/www/html/docroot/media
       - cache:/var/www/html/docroot/var/cache
@@ -105,7 +105,7 @@ services:
       DOCKER_MAUTIC_RUN_MIGRATIONS: "true"
       PHP_MEMORY_LIMIT: 256M
     volumes:
-      - config:/var/www/html/docroot/app/config
+      - config:/var/www/html/config
       - logs:/var/www/html/docroot/var/log
       - cache:/var/www/html/docroot/var/cache
     command: >
@@ -142,7 +142,7 @@ services:
       DOCKER_MAUTIC_RUN_MIGRATIONS: "true"
       PHP_MEMORY_LIMIT: 256M
     volumes:
-      - config:/var/www/html/docroot/app/config
+      - config:/var/www/html/config
       - logs:/var/www/html/docroot/var/log
       - cache:/var/www/html/docroot/var/cache
     command: >
