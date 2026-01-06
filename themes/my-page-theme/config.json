@@ -1,0 +1,11 @@
+{
+  "name": "My Page Theme",
+  "author": "Your Name",
+  "authorUrl": "https://example.com",
+  "description": "A custom Mautic page theme",
+  "version": "1.0.0",
+  "features": [
+    "page"
+  ],
+  "screenshots": []
+}

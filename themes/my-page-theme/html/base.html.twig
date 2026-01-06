@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="{{ app.locale }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mautic{% endblock %}</title>
+    {{ outputHeadDeclarations() }}
+</head>
+<body>
+    {% block body %}{% endblock %}
+    {{ outputScripts('body') }}
+</body>
+</html>
