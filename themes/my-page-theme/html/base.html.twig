@@ -1,13 +1,14 @@
-<!DOCTYPE html>
-<html lang="{{ app.locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mautic{% endblock %}</title>
-    {{ outputHeadDeclarations() }}
-</head>
-<body>
-    {% block body %}{% endblock %}
-    {{ outputScripts('body') }}
-</body>
-</html>
+{% extends '@MauticCore/Theme/base.html.twig' %}
+
+{% block content %}
+<div class="mautic-page">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{ page.title }}</h1>
+        </div>
+        <div class="page-content">
+            {{ content|raw }}
+        </div>
+    </div>
+</div>
+{% endblock %}
