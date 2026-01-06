@@ -8,10 +8,10 @@ WORKDIR /var/www/html
 COPY composer.json /tmp/composer.json
 RUN composer install --no-dev --optimize-autoloader --working-dir=/var/www/html
 
-# Copy custom themes to themes directory
+# Copy custom themes to the themes directory
 COPY themes/ /var/www/html/docroot/themes/
 
-# Copy custom plugins to plugins directory
+# Copy custom plugins to the plugins directory
 COPY plugins/ /var/www/html/docroot/plugins/
 
 # Set proper ownership for www-data user
@@ -19,20 +19,13 @@ RUN chown -R www-data:www-data /var/www/html/docroot/themes && \
     chown -R www-data:www-data /var/www/html/docroot/plugins && \
     chown -R www-data:www-data /var/www/html/vendor
 
-# Create entrypoint script to skip setup on existing installations
-RUN echo '#!/bin/bash' > /usr/local/bin/docker-entrypoint.sh && \
-    echo 'if [ -f /var/www/html/docroot/app/config/local.php ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '  echo "Mautic already installed, skipping setup..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '  exec apache2-foreground "$@"' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'else' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '  echo "First run, executing Mautic setup..."' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo '  exec /var/www/html/docker-entrypoint.sh "$@"' >> /usr/local/bin/docker-entrypoint.sh && \
-    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh
-
 # Clear cache to ensure fresh state
 RUN rm -rf /var/www/html/var/cache/* && \
     rm -rf /var/www/html/var/log/*
 
-# Set default command
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Copy custom entrypoint script that detects existing installations
+COPY docker-entrypoint-custom.sh /usr/local/bin/docker-entrypoint-custom.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint-custom.sh
+
+# Use custom entrypoint that skips setup on existing installations
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-custom.sh"]
