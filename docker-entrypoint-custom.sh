@@ -100,11 +100,12 @@ update_site_url_if_needed() {
     # Query current site_url from database
     local current_url
     current_url=$(mysql -h"$db_host" -u"$db_user" -p"$db_password" -D"$db_name" -sN -e \
-        "SELECT value FROM ${db_table_prefix}config WHERE name = 'site_url';" 2>/dev/null)
+        "SELECT value FROM ${db_table_prefix}config WHERE name = 'site_url';" 2>&1)
     
     # Handle database connection errors
     if [ $? -ne 0 ]; then
         echo "[mautic_entrypoint]: Warning: Failed to query site_url from database, skipping update"
+        echo "[mautic_entrypoint]: mysql query error: $current_url"
         return 0
     fi
     
@@ -122,14 +123,20 @@ update_site_url_if_needed() {
         local escaped_url
         escaped_url=$(printf '%s' "$expected_url" | sed "s/'/\\\\'/g")
         
+        echo "[mautic_entrypoint]: DEBUG - Escaped URL: $escaped_url"
+        
         # Update site_url in database with escaped value
-        mysql -h"$db_host" -u"$db_user" -p"$db_password" -D"$db_name" -e \
-            "UPDATE ${db_table_prefix}config SET value = '$escaped_url' WHERE name = 'site_url';" 2>/dev/null
+        local update_result
+        update_result=$(mysql -h"$db_host" -u"$db_user" -p"$db_password" -D"$db_name" -e \
+            "UPDATE ${db_table_prefix}config SET value = '$escaped_url' WHERE name = 'site_url';" 2>&1)
+        
+        echo "[mautic_entrypoint]: DEBUG - MySQL update result: $update_result"
         
         if [ $? -eq 0 ]; then
             echo "[mautic_entrypoint]: Site URL successfully updated to: $expected_url"
         else
             echo "[mautic_entrypoint]: Warning: Failed to update site_url in database"
+            echo "[mautic_entrypoint]: MySQL exit code: $?"
             return 1
         fi
     else

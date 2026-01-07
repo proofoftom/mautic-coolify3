@@ -120,9 +120,9 @@ services:
       - cache:/var/www/html/docroot/var/cache
     command: >
       bash -c "while true; do
-        php /var/www/html/docroot/bin/console mautic:segments:update
-        php /var/www/html/docroot/bin/console mautic:campaigns:trigger
-        php /var/www/html/docroot/bin/console mautic:emails:send
+        php /var/www/html/bin/console mautic:segments:update
+        php /var/www/html/bin/console mautic:campaigns:trigger
+        php /var/www/html/bin/console mautic:emails:send
         sleep 300
       done"
     depends_on:
@@ -165,7 +165,7 @@ services:
       - cache:/var/www/html/docroot/var/cache
     command: >
       bash -c "while true; do
-        php /var/www/html/docroot/bin/console messenger:consume mautic --time-limit=300 --memory-limit=256M
+        php /var/www/html/bin/console messenger:consume mautic --time-limit=300 --memory-limit=256M
       done"
     depends_on:
       mysql:
