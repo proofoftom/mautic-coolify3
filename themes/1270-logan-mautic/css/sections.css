@@ -1,0 +1,138 @@
+/**
+ * 1270 Logan Theme - Sections
+ *
+ * Section-specific styles for hero, location, building, gallery, CTA, footer.
+ */
+
+/* Hero Section */
+.hero {
+  height: 100vh;
+  background: linear-gradient(
+      rgba(93, 46, 63, 0.7),
+      rgba(93, 46, 63, 0.7)
+    ),
+    url("../../images/building-01.webp")
+      no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: white;
+  position: relative;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero p {
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+  color: white;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-btn {
+  background: var(--gold);
+  color: white;
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.hero-btn:hover {
+  background: var(--deep-burgundy);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Location Story Section */
+.location-story {
+  background-color: white;
+}
+
+.location-text h2 {
+  margin-bottom: 20px;
+}
+
+.location-text p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* Building Character Section */
+.building-character {
+  background: linear-gradient(to bottom, var(--cream) 0%, white 100%);
+}
+
+.character-text h2 {
+  margin-bottom: 20px;
+}
+
+.character-text p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* Gallery Section */
+.gallery {
+  background: white;
+}
+
+/* Availability/CTA Section */
+.availabilty {
+  background: linear-gradient(
+      rgba(93, 46, 63, 0.9),
+      rgba(93, 46, 63, 0.9)
+    ),
+    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80")
+      no-repeat center center/cover;
+  text-align: center;
+  color: white;
+  padding: 100px 0;
+}
+
+.availabilty h2 {
+  color: white;
+}
+
+.availabilty p {
+  color: white;
+}
+
+/* Testimonials Section */
+.testimonials {
+  background: linear-gradient(
+    to bottom,
+    white 0%,
+    white 50%,
+    var(--cream) 50%,
+    var(--cream) 100%
+  );
+}
+
+/* Footer */
+footer {
+  background: var(--deep-burgundy);
+  color: white;
+  padding: 50px 0 20px;
+}

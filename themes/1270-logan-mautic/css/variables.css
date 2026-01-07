@@ -1,0 +1,33 @@
+/**
+ * 1270 Logan Theme - Variables
+ *
+ * CSS Custom Properties for theming consistency.
+ * Modify these values to customize the color palette,
+ * typography, and spacing throughout the theme.
+ */
+:root {
+  /* Colors */
+  --deep-burgundy: #5d2e3f;
+  --gold: #c9a66b;
+  --cream: #f5f0e6;
+  --dark-green: #2e5d3f;
+  --warm-gray: #8c8573;
+  --victorian-blue: #3a506b;
+  
+  /* Typography */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Montserrat', sans-serif;
+  
+  /* Spacing */
+  --section-padding: 80px;
+  --container-width: 1200px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}

@@ -1,0 +1,32 @@
+{# 1270 Logan Theme - Base Template
+    Extends Mautic's core base template and provides
+    HTML document structure, asset loading, and Mautic integration. #}
+{% extends '@MauticCore/Theme/base.html.twig' %}
+
+{% block head_css %}
+    {# Load external fonts #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    {# Load theme CSS files in order #}
+    <link rel="stylesheet" href="{{ getAssetUrl('themes/1270-logan-mautic/css/variables.css') }}" />
+    <link rel="stylesheet" href="{{ getAssetUrl('themes/1270-logan-mautic/css/base.css') }}" />
+    <link rel="stylesheet" href="{{ getAssetUrl('themes/1270-logan-mautic/css/components.css') }}" />
+    <link rel="stylesheet" href="{{ getAssetUrl('themes/1270-logan-mautic/css/layout.css') }}" />
+    <link rel="stylesheet" href="{{ getAssetUrl('themes/1270-logan-mautic/css/sections.css') }}" />
+    <link rel="stylesheet" href="{{ getAssetUrl('themes/1270-logan-mautic/css/responsive.css') }}" />
+{% endblock %}
+
+{% block content %}
+    {# Main content block - overridden in page.html.twig #}
+{% endblock %}
+
+{% block footer_js %}
+    {# Load theme JavaScript #}
+    <script src="{{ getAssetUrl('themes/1270-logan-mautic/js/main.js') }}" defer></script>
+{% endblock %}
+
+{% block tracking %}
+    {# Mautic tracking code insertion #}
+    {{ mauticContent() }}
+{% endblock %}

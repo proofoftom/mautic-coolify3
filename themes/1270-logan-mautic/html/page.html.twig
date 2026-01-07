@@ -1,0 +1,15 @@
+{# 1270 Logan Theme - Page Template
+    Main page template that assembles all partials. #}
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    {% include 'partials/_header.html.twig' %}
+    {% include 'partials/_mobile-nav.html.twig' %}
+    {% include 'partials/_hero.html.twig' %}
+    {% include 'partials/_location.html.twig' %}
+    {% include 'partials/_building.html.twig' %}
+    {% include 'partials/_gallery.html.twig' %}
+    {% include 'partials/_cta.html.twig' %}
+    {% include 'partials/_footer.html.twig' %}
+    {% include 'partials/_modal.html.twig' %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{
+  "name": "1270 Logan Victorian",
+  "author": "Your Organization",
+  "authorUrl": "https://example.com",
+  "description": "A Victorian-styled page theme featuring a luxury apartment property design with hero section, feature cards, image gallery with lightbox, and responsive navigation.",
+  "version": "1.0.0",
+  "builder": ["legacy", "grapesjsbuilder"],
+  "features": [
+    "page"
+  ],
+  "screenshots": []
+}
