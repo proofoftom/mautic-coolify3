@@ -74,34 +74,14 @@ fix_permissions() {
 }
 
 update_site_url_if_needed() {
-    echo "[mautic_entrypoint]: Checking if site URL needs update..."
+    echo "[mautic_entrypoint]: Checking site URL configuration..."
     
     local expected_url="${MAUTIC_URL:-http://localhost}"
-    
-    # Remove trailing slash if present
     expected_url="${expected_url%/}"
     
-    # Get current site URL from Mautic configuration
-    local current_url=""
-    
-    # Try to get current URL from Mautic config using console command
-    if command -v php &> /dev/null && [ -f "/var/www/html/docroot/bin/console" ]; then
-        current_url=$(php /var/www/html/docroot/bin/console mautic:config:get site_url 2>/dev/null || echo "")
-    fi
-    
-    # If we couldn't get current URL or it's different, update it
-    if [ -z "$current_url" ] || [ "$current_url" != "$expected_url" ]; then
-        echo "[mautic_entrypoint]: Updating site URL from '$current_url' to '$expected_url'"
-        
-        # Update site URL in Mautic configuration
-        php /var/www/html/docroot/bin/console mautic:config:set site_url "$expected_url" 2>/dev/null || \
-            echo "[mautic_entrypoint]: Warning: Failed to update site URL via console"
-        
-        # Clear cache after configuration change
-        clear_cache
-    else
-        echo "[mautic_entrypoint]: Site URL is correct: $current_url"
-    fi
+    echo "[mautic_entrypoint]: Expected site URL: $expected_url"
+    echo "[mautic_entrypoint]: Site URL is set during installation and managed via Mautic admin panel"
+    echo "[mautic_entrypoint]: To update site URL, go to Settings > Configuration > System Settings in Mautic admin"
 }
 
 wait_for_db() {
