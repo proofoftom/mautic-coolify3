@@ -132,6 +132,8 @@ wait_for_db() {
 }
 
 run_automatic_install() {
+    # Only run installation on mautic_web container (not cron/worker)
+    if [ "$DOCKER_MAUTIC_ROLE" != "mautic_cron" ] && [ "$DOCKER_MAUTIC_ROLE" != "mautic_worker" ]; then
     echo "[mautic_entrypoint]: Running automatic Mautic installation..."
     
     # Wait for database
