@@ -216,7 +216,10 @@ run_automatic_install() {
 if is_installed; then
     echo "[mautic_entrypoint]: Existing Mautic installation detected."
     echo "[mautic_entrypoint]: Skipping installation, only updating code..."
-    
+
+    # Update site URL if it doesn't match environment variable
+    update_site_url_if_needed
+
     # Clear cache to pick up theme/plugin changes
     clear_cache
     
