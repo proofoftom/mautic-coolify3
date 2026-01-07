@@ -44,6 +44,8 @@ services:
     container_name: mautic-web
     restart: unless-stopped
     environment:
+      # Container role - only web container should run installation/URL updates
+      CONTAINER_ROLE: web
       # Database configuration
       MAUTIC_DB_HOST: mysql
       MAUTIC_DB_PORT: 3306
@@ -93,6 +95,8 @@ services:
     container_name: mautic-cron
     restart: unless-stopped
     environment:
+      # Container role - cron container skips installation/URL updates
+      CONTAINER_ROLE: cron
       MAUTIC_DB_HOST: mysql
       MAUTIC_DB_PORT: 3306
       MAUTIC_DB_NAME: mautic
@@ -136,6 +140,8 @@ services:
     container_name: mautic-worker
     restart: unless-stopped
     environment:
+      # Container role - worker container skips installation/URL updates
+      CONTAINER_ROLE: worker
       MAUTIC_DB_HOST: mysql
       MAUTIC_DB_PORT: 3306
       MAUTIC_DB_NAME: mautic
