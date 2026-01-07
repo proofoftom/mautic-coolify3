@@ -242,17 +242,6 @@ echo "[mautic_entrypoint]: Web container detected - handling installation and UR
 if is_installed; then
     echo "[mautic_entrypoint]: Existing Mautic installation detected."
     echo "[mautic_entrypoint]: Skipping installation, only updating code..."
-    
-    # Wait for database to be ready before querying it
-    echo "[mautic_entrypoint]: Waiting for database to be ready..."
-    wait_for_db || {
-        echo "[mautic_entrypoint]: ERROR: Database connection timeout!"
-        exit 1
-    }
-    echo "[mautic_entrypoint]: Database is ready, proceeding with URL update..."
-
-    # Update site URL if it doesn't match environment variable
-    update_site_url_if_needed
 
     # Clear cache to pick up theme/plugin changes
     clear_cache
