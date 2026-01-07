@@ -54,7 +54,7 @@ services:
       # Messenger/Queue configuration
       MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
       # URL configuration
-      MAUTIC_URL: ${SERVICE_URL_MAUTIC_80}
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_WEB}
       MAUTIC_TRUSTED_PROXIES: '["127.0.0.1/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]'
       # Admin credentials for automatic installation
       MAUTIC_ADMIN_USERNAME: ${MAUTIC_ADMIN_USERNAME:-admin}
@@ -72,6 +72,8 @@ services:
       - logs:/var/www/html/docroot/var/log
       - media:/var/www/html/docroot/media
       - cache:/var/www/html/docroot/var/cache
+      - vendor:/var/www/html/vendor
+      - bin:/var/www/html/bin
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
@@ -206,6 +208,18 @@ volumes:
       type: none
       o: bind
       device: ./volumes/cache
+  vendor:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/vendor
+  bin:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/bin
 
 networks:
   mautic-network:

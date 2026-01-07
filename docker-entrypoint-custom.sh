@@ -138,7 +138,8 @@ run_automatic_install() {
     wait_for_db || exit 1
     
     # Build site URL from environment
-    SITE_URL="${MAUTIC_URL:-http://localhost}"
+    # Try multiple Coolify URL variable patterns (SERVICE_URL_MAUTIC_WEB, COOLIFY_URL, SERVICE_URL_MAUTIC_80)
+    SITE_URL="${MAUTIC_URL:-${COOLIFY_URL:-${SERVICE_URL_MAUTIC_WEB:-${SERVICE_URL_MAUTIC_80:-http://localhost}}}"
     
     # Remove trailing slash if present
     SITE_URL="${SITE_URL%/}"
