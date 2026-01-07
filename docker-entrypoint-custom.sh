@@ -4,6 +4,10 @@ set -e
 # Custom Mautic entrypoint script
 # - Automatic installation on first deployment using environment variables
 # - Skip setup on subsequent deployments (only update code)
+# - Only web container handles installation and runs Apache
+
+# Container type detection
+CONTAINER_TYPE="${MAUTIC_CONTAINER_TYPE:-web}"
 
 # Configuration file locations
 LOCAL_CONFIG="/var/www/html/config/local.php"
@@ -151,29 +155,39 @@ run_automatic_install() {
 
 # =========== MAIN EXECUTION ==========
 
-if is_installed; then
-    echo "[mautic_entrypoint]: Existing Mautic installation detected."
-    echo "[mautic_entrypoint]: Skipping installation, only updating code..."
-    
-    # Clear cache to pick up theme/plugin changes
-    clear_cache
-    
-    # Fix permissions
-    fix_permissions
-    
-    echo "[mautic_entrypoint]: Starting Apache..."
-    exec apache2-foreground
-else
-    echo "[mautic_entrypoint]: No existing installation found."
-    
-    # Check if we have required environment variables for automatic install
-    if [ -n "$MAUTIC_DB_USER" ] && [ -n "$MAUTIC_DB_PASSWORD" ]; then
-        echo "[mautic_entrypoint]: Database credentials found, running automatic installation..."
-        run_automatic_install
-    else
-        echo "[mautic_entrypoint]: No database credentials found in environment."
-        echo "[mautic_entrypoint]: Please set MAUTIC_DB_USER and MAUTIC_DB_PASSWORD for automatic installation."
-        echo "[mautic_entrypoint]: Starting Apache for manual installation..."
+# Only web container should handle installation and run Apache
+if [ "$CONTAINER_TYPE" = "web" ]; then
+    if is_installed; then
+        echo "[mautic_entrypoint]: Existing Mautic installation detected."
+        echo "[mautic_entrypoint]: Skipping installation, only updating code..."
+        
+        # Clear cache to pick up theme/plugin changes
+        clear_cache
+        
+        # Fix permissions
+        fix_permissions
+        
+        echo "[mautic_entrypoint]: Starting Apache..."
         exec apache2-foreground
+    else
+        echo "[mautic_entrypoint]: No existing installation found."
+        
+        # Check if we have required environment variables for automatic install
+        if [ -n "$MAUTIC_DB_USER" ] && [ -n "$MAUTIC_DB_PASSWORD" ]; then
+            echo "[mautic_entrypoint]: Database credentials found, running automatic installation..."
+            run_automatic_install
+        else
+            echo "[mautic_entrypoint]: No database credentials found in environment."
+            echo "[mautic_entrypoint]: Please set MAUTIC_DB_USER and MAUTIC_DB_PASSWORD for automatic installation."
+            echo "[mautic_entrypoint]: Starting Apache for manual installation..."
+            exec apache2-foreground
+        fi
     fi
+else
+    # Non-web containers (cron, worker) - skip installation and Apache
+    echo "[mautic_entrypoint]: Running as $CONTAINER_TYPE container - skipping installation and Apache"
+    echo "[mautic_entrypoint]: Waiting for container command to execute..."
+    
+    # Just wait - command from docker-compose will take over
+    exec tail -f /dev/null
 fi
