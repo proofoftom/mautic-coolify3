@@ -137,7 +137,7 @@ update_site_url_if_needed() {
         else
             echo "[mautic_entrypoint]: Warning: Failed to update site_url in database"
             echo "[mautic_entrypoint]: MySQL exit code: $?"
-            return 1
+            return 0
         fi
     else
         echo "[mautic_entrypoint]: Site URL matches MAUTIC_URL, no update needed"
