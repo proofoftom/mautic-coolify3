@@ -97,13 +97,18 @@ update_site_url_if_needed() {
         return 0
     fi
     
+    echo "[mautic_entrypoint]: DEBUG: About to query database for current site_url (db_host=$db_host, db_name=$db_name)"
+    
     # Query current site_url from database
     local current_url
     current_url=$(mysql -h"$db_host" -u"$db_user" -p"$db_password" -D"$db_name" -sN -e \
         "SELECT value FROM ${db_table_prefix}config WHERE name = 'site_url';" 2>&1)
+    local mysql_exit_code=$?
+    
+    echo "[mautic_entrypoint]: DEBUG: MySQL query completed, exit code: $mysql_exit_code"
     
     # Handle database connection errors
-    if [ $? -ne 0 ]; then
+    if [ $mysql_exit_code -ne 0 ]; then
         echo "[mautic_entrypoint]: Warning: Failed to query site_url from database, skipping update"
         echo "[mautic_entrypoint]: mysql query error: $current_url"
         return 0
@@ -129,14 +134,15 @@ update_site_url_if_needed() {
         local update_result
         update_result=$(mysql -h"$db_host" -u"$db_user" -p"$db_password" -D"$db_name" -e \
             "UPDATE ${db_table_prefix}config SET value = '$escaped_url' WHERE name = 'site_url';" 2>&1)
+        local mysql_update_exit_code=$?
         
         echo "[mautic_entrypoint]: DEBUG - MySQL update result: $update_result"
         
-        if [ $? -eq 0 ]; then
+        if [ $mysql_update_exit_code -eq 0 ]; then
             echo "[mautic_entrypoint]: Site URL successfully updated to: $expected_url"
         else
             echo "[mautic_entrypoint]: Warning: Failed to update site_url in database"
-            echo "[mautic_entrypoint]: MySQL exit code: $?"
+            echo "[mautic_entrypoint]: MySQL exit code: $mysql_update_exit_code"
             return 0
         fi
     else
@@ -236,6 +242,14 @@ echo "[mautic_entrypoint]: Web container detected - handling installation and UR
 if is_installed; then
     echo "[mautic_entrypoint]: Existing Mautic installation detected."
     echo "[mautic_entrypoint]: Skipping installation, only updating code..."
+    
+    # Wait for database to be ready before querying it
+    echo "[mautic_entrypoint]: Waiting for database to be ready..."
+    wait_for_db || {
+        echo "[mautic_entrypoint]: ERROR: Database connection timeout!"
+        exit 1
+    }
+    echo "[mautic_entrypoint]: Database is ready, proceeding with URL update..."
 
     # Update site URL if it doesn't match environment variable
     update_site_url_if_needed
