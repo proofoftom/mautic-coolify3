@@ -4,7 +4,6 @@ set -e
 # Custom Mautic entrypoint script
 # - Automatic installation on first deployment using environment variables
 # - Skip setup on subsequent deployments (only update code)
-# - File-based lock mechanism to prevent race conditions during installation
 
 # Configuration file locations
 LOCAL_CONFIG="/var/www/html/config/local.php"
@@ -16,7 +15,6 @@ INSTALL_MARKER_FILE="/var/www/html/config/.installed"
 INSTALL_LOCK_TIMEOUT=300  # 5 minutes in seconds
 
 # Acquire install lock using atomic mkdir operation
-# Returns: 0 on success, 1 if installation completed by another container, 2 on timeout
 acquire_install_lock() {
     local lock_dir="$INSTALL_LOCK_FILE"
     local elapsed=0
@@ -132,25 +130,20 @@ wait_for_db() {
 }
 
 run_automatic_install() {
-    # Only run installation on mautic_web container (not cron/worker)
-    if [ "$DOCKER_MAUTIC_ROLE" != "mautic_cron" ] && [ "$DOCKER_MAUTIC_ROLE" != "mautic_worker" ]; then
     echo "[mautic_entrypoint]: Running automatic Mautic installation..."
     
     # Wait for database
     wait_for_db || exit 1
     
-    # Build site URL from environment
-    # Try multiple Coolify URL variable patterns in order of preference
+    # Build site URL from environment - try multiple Coolify URL variable patterns
     if [ -n "$MAUTIC_URL" ]; then
         SITE_URL="$MAUTIC_URL"
     elif [ -n "$COOLIFY_URL" ]; then
         SITE_URL="$COOLIFY_URL"
     elif [ -n "$SERVICE_URL_MAUTIC_WEB" ]; then
         SITE_URL="$SERVICE_URL_MAUTIC_WEB"
-    elif [ -n "$SERVICE_URL_MAUTIC_80" ]; then
-        SITE_URL="$SERVICE_URL_MAUTIC_80"
     else
-        SITE_URL="http://localhost"
+        SITE_URL="${MAUTIC_URL:-http://localhost}"
     fi
     
     # Remove trailing slash if present
@@ -253,4 +246,3 @@ else
         echo "[mautic_entrypoint]: Starting Apache for manual installation..."
         exec apache2-foreground
     fi
-fi
