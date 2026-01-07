@@ -111,6 +111,25 @@ run_automatic_install() {
         SITE_URL="${MAUTIC_URL:-http://localhost}"
     fi
     
+    # Log environment MAUTIC_URL for debugging
+    echo "[mautic_entrypoint]: Environment MAUTIC_URL: $MAUTIC_URL"
+    echo "[mautic_entrypoint]: Using SITE_URL: $SITE_URL"
+    
+    # Read current site_url from Mautic config if exists
+    if [ -f "$LOCAL_CONFIG" ]; then
+        CONFIG_URL=$(php -r "echo \$parameters['site_url'];" "$LOCAL_CONFIG" 2>/dev/null || echo "")
+        echo "[mautic_entrypoint]: Config site_url from $LOCAL_CONFIG: $CONFIG_URL"
+    else
+        echo "[mautic_entrypoint]: Config file $LOCAL_CONFIG not found"
+    fi
+    
+    # Check for URL mismatch
+    if [ -n "$CONFIG_URL" ] && [ "$CONFIG_URL" != "$SITE_URL" ]; then
+        echo "[mautic_entrypoint]: WARNING - URL MISMATCH detected!"
+        echo "[mautic_entrypoint]: Expected: $SITE_URL"
+        echo "[mautic_entrypoint]: Found in config: $CONFIG_URL"
+    fi
+    
     # Remove trailing slash if present
     SITE_URL="${SITE_URL%/}"
     
