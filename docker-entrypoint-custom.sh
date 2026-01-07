@@ -73,6 +73,51 @@ fix_permissions() {
     chown -R www-data:www-data /var/www/html/var 2>/dev/null || true
 }
 
+configure_trusted_proxies() {
+    echo "[mautic_entrypoint]: Configuring trusted proxies..."
+    
+    # Default trusted proxies for Docker/Kubernetes environments
+    local trusted_proxies="${MAUTIC_TRUSTED_PROXIES:-[\"127.0.0.1/8\",\"10.0.0.0/8\",\"172.16.0.0/12\",\"192.168.0.0/16\"]}"
+    
+    # Check if local.php exists
+    if [ ! -f "$LOCAL_CONFIG" ]; then
+        echo "[mautic_entrypoint]: local.php not found, skipping trusted proxies configuration"
+        return 0
+    fi
+    
+    # Check if trusted_proxies is already configured
+    if grep -q "'trusted_proxies'" "$LOCAL_CONFIG" 2>/dev/null; then
+        echo "[mautic_entrypoint]: trusted_proxies already configured in local.php"
+        return 0
+    fi
+    
+    echo "[mautic_entrypoint]: Adding trusted_proxies to local.php: $trusted_proxies"
+    
+    # Create a PHP snippet to add trusted_proxies to the config
+    # We insert it before the closing ); of the $parameters array
+    php -r "
+        \$config = file_get_contents('$LOCAL_CONFIG');
+        if (strpos(\$config, \"'trusted_proxies'\") === false) {
+            // Find the parameters array and add trusted_proxies
+            \$proxies = $trusted_proxies;
+            \$proxyString = \"    'trusted_proxies' => \" . var_export(\$proxies, true) . \",\n\";
+            
+            // Insert before the closing of parameters array
+            // Look for the pattern 'parameters' => [ ... ]
+            if (preg_match('/(\\'parameters\\'\\s*=>\\s*\\[)/s', \$config, \$matches)) {
+                \$insertPos = strpos(\$config, \$matches[0]) + strlen(\$matches[0]);
+                \$config = substr(\$config, 0, \$insertPos) . \"\n\" . \$proxyString . substr(\$config, \$insertPos);
+                file_put_contents('$LOCAL_CONFIG', \$config);
+                echo \"trusted_proxies added successfully\n\";
+            } else {
+                echo \"Could not find parameters array in config\n\";
+            }
+        }
+    " 2>&1
+    
+    echo "[mautic_entrypoint]: Trusted proxies configuration complete"
+}
+
 update_site_url_if_needed() {
     echo "[mautic_entrypoint]: Checking site URL configuration..."
     
@@ -243,6 +288,9 @@ if is_installed; then
     echo "[mautic_entrypoint]: Existing Mautic installation detected."
     echo "[mautic_entrypoint]: Skipping installation, only updating code..."
 
+    # Configure trusted proxies for reverse proxy support
+    configure_trusted_proxies
+
     # Clear cache to pick up theme/plugin changes
     clear_cache
     
@@ -258,6 +306,10 @@ else
     if [ -n "$MAUTIC_DB_USER" ] && [ -n "$MAUTIC_DB_PASSWORD" ]; then
         echo "[mautic_entrypoint]: Database credentials found, running automatic installation..."
         run_automatic_install
+        
+        # Configure trusted proxies for reverse proxy support
+        configure_trusted_proxies
+        
         echo "[mautic_entrypoint]: Starting Apache..."
         exec apache2-foreground
     else
