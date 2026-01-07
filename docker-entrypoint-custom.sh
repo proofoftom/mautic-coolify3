@@ -107,8 +107,6 @@ run_automatic_install() {
         SITE_URL="$COOLIFY_URL"
     elif [ -n "$SERVICE_URL_MAUTIC_WEB" ]; then
         SITE_URL="$SERVICE_URL_MAUTIC_WEB"
-    elif [ -n "$SERVICE_URL_MAUTIC_80" ]; then
-        SITE_URL="$SERVICE_URL_MAUTIC_80"
     else
         SITE_URL="${MAUTIC_URL:-http://localhost}"
     fi
