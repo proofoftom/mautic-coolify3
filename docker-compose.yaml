@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   mysql:
@@ -13,17 +13,7 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${SERVICE_PASSWORD_64_MYSQLROOT}",
-        ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${SERVICE_PASSWORD_64_MYSQLROOT}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -64,7 +54,7 @@ services:
       # Messenger/Queue configuration
       MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
       # URL configuration
-      MAUTIC_SITE_URL: ${SERVICE_URL_MAUTIC_WEB}
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_WEB}
       MAUTIC_TRUSTED_PROXIES: '["127.0.0.1/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]'
       # Admin credentials for automatic installation
       MAUTIC_ADMIN_USERNAME: ${MAUTIC_ADMIN_USERNAME:-admin}
@@ -110,7 +100,7 @@ services:
       MAUTIC_DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
       MAUTIC_DB_TABLE_PREFIX: mautic_
       MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
-      MAUTIC_SITE_URL: ${SERVICE_URL_MAUTIC_WEB}
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_80}
       MAUTIC_TRUSTED_PROXIES: '["127.0.0.1/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]'
       # Admin credentials for automatic installation (in case this container wins the race)
       MAUTIC_ADMIN_USERNAME: ${MAUTIC_ADMIN_USERNAME:-admin}
@@ -153,7 +143,7 @@ services:
       MAUTIC_DB_PASSWORD: ${SERVICE_PASSWORD_64_MYSQL}
       MAUTIC_DB_TABLE_PREFIX: mautic_
       MAUTIC_MESSENGER_DSN: amqp://${SERVICE_USER_RABBITMQ:-mautic}:${SERVICE_PASSWORD_64_RABBITMQ}@rabbitmq:5672/%2F/messages
-      MAUTIC_SITE_URL: ${SERVICE_URL_MAUTIC_WEB}
+      MAUTIC_URL: ${SERVICE_URL_MAUTIC_80}
       MAUTIC_TRUSTED_PROXIES: '["127.0.0.1/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]'
       # Admin credentials for automatic installation (in case this container wins the race)
       MAUTIC_ADMIN_USERNAME: ${MAUTIC_ADMIN_USERNAME:-admin}
