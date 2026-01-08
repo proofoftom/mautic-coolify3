@@ -115,7 +115,7 @@ fix_permissions() {
 update_site_url_if_needed() {
     echo "[mautic_entrypoint]: Checking if site URL needs update..."
     
-    local expected_url="${MAUTIC_URL:-http://localhost}"
+    local expected_url="${MAUTIC_SITE_URL:-http://localhost}"
     
     # Remove trailing slash if present
     expected_url="${expected_url%/}"
@@ -169,7 +169,7 @@ run_automatic_install() {
     wait_for_db || exit 1
     
     # Build site URL from environment
-    SITE_URL="${MAUTIC_URL:-http://localhost}"
+    SITE_URL="${MAUTIC_SITE_URL:-http://localhost}"
     
     # Remove trailing slash if present
     SITE_URL="${SITE_URL%/}"

@@ -233,7 +233,7 @@ To force a complete rebuild (ignoring Docker cache):
 | `MAUTIC_DB_PASSWORD` | *auto* | Database password |
 | `MAUTIC_DB_TABLE_PREFIX` | `mautic_` | Database table prefix |
 | `MAUTIC_MESSENGER_DSN` | *auto* | RabbitMQ connection string |
-| `MAUTIC_URL` | *auto* | Mautic public URL |
+| `MAUTIC_SITE_URL` | *auto* | Mautic public URL |
 | `MAUTIC_TRUSTED_PROXIES` | `0` | Trusted proxy count |
 | `DOCKER_MAUTIC_RUN_MIGRATIONS` | `true` | Auto-run migrations |
 
